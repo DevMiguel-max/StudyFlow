@@ -1,0 +1,6 @@
+{
+  "name": "StudyFlow",
+  "description": "O melhor aplicativo de organização e gamificação de estudos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
