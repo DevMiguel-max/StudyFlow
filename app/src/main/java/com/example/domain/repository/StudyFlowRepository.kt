@@ -41,4 +41,50 @@ interface StudyFlowRepository {
 
     fun getMindMapNodesBySubject(subjectId: Int): Flow<List<MindMapNode>>
     suspend fun insertMindMapNode(node: MindMapNode): Long
+
+    // Phase 6
+    fun getAllExamGoals(): Flow<List<ExamGoal>>
+    suspend fun insertExamGoal(examGoal: ExamGoal): Long
+
+    fun getAllEssayThemes(): Flow<List<EssayTheme>>
+    suspend fun insertEssayTheme(theme: EssayTheme): Long
+    suspend fun insertEssayThemes(themes: List<EssayTheme>)
+
+    suspend fun getMotivationalTextsForTheme(themeId: Int): List<MotivationalText>
+    suspend fun insertMotivationalText(text: MotivationalText): Long
+    suspend fun insertMotivationalTexts(texts: List<MotivationalText>)
+
+    fun getAllEssayCorrections(): Flow<List<EssayCorrection>>
+
+    fun getAllEssaySubmissions(): Flow<List<EssaySubmission>>
+    suspend fun getEssaySubmissionById(id: Int): EssaySubmission?
+    suspend fun insertEssaySubmission(submission: EssaySubmission): Long
+    suspend fun updateEssaySubmission(submission: EssaySubmission)
+
+    suspend fun getEssayCorrectionForSubmission(submissionId: Int): EssayCorrection?
+    suspend fun insertEssayCorrection(correction: EssayCorrection): Long
+
+    fun getAllSimulations(): Flow<List<Simulation>>
+    suspend fun insertSimulation(simulation: Simulation): Long
+
+    // Global Migration Entities
+    fun getAllStudyGoals(): Flow<List<StudyGoal>>
+    suspend fun insertStudyGoal(goal: StudyGoal): Long
+    suspend fun updateStudyGoal(goal: StudyGoal)
+    suspend fun deleteStudyGoal(goal: StudyGoal)
+
+    fun getExamNoticesForGoal(goalId: Int): Flow<List<ExamNotice>>
+    suspend fun insertExamNotice(notice: ExamNotice): Long
+
+    fun getExamNoticeVersions(noticeId: Int): Flow<List<ExamNoticeVersion>>
+    suspend fun insertExamNoticeVersion(version: ExamNoticeVersion): Long
+
+    fun getExamNoticeSubjects(noticeId: Int): Flow<List<ExamNoticeSubject>>
+    suspend fun insertExamNoticeSubject(subject: ExamNoticeSubject): Long
+
+    fun getAllStudyDocuments(): Flow<List<StudyDocument>>
+    suspend fun insertStudyDocument(document: StudyDocument): Long
+
+    suspend fun getDocumentAnalysis(documentId: Int): DocumentAnalysis?
+    suspend fun insertDocumentAnalysis(analysis: DocumentAnalysis): Long
 }

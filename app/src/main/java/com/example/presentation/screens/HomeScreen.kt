@@ -131,6 +131,31 @@ fun HomeScreen(
         item {
             Column(modifier = Modifier.padding(16.dp)) {
                 SectionTitle(
+                    title = "Explorar",
+                    actionText = "",
+                    onActionClick = {}
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    ModuleCard(title = "Objetivos", icon = "🎯", color = Color(0xFFE0F2FE), modifier = Modifier.weight(1f)) { navController.navigate("preparation") }
+                    ModuleCard(title = "Cronograma", icon = "📅", color = Color(0xFFFCE7F3), modifier = Modifier.weight(1f)) { navController.navigate("calendar") }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    ModuleCard(title = "Redação", icon = "📝", color = Color(0xFFF3E8FF), modifier = Modifier.weight(1f)) { navController.navigate("essay_module") }
+                    ModuleCard(title = "Simulados", icon = "📊", color = Color(0xFFD1FAE5), modifier = Modifier.weight(1f)) { navController.navigate("simulations") }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    ModuleCard(title = "Métodos", icon = "🧠", color = Color(0xFFFEF3C7), modifier = Modifier.weight(1f)) { navController.navigate("study_methods") }
+                    ModuleCard(title = "Sessões", icon = "🏆", color = Color(0xFFE0E7FF), modifier = Modifier.weight(1f)) { navController.navigate("tasks") }
+                }
+            }
+        }
+        
+        item {
+            Column(modifier = Modifier.padding(16.dp)) {
+                SectionTitle(
                     title = "Planos de Estudo Inteligentes",
                     actionText = "Criar Novo",
                     onActionClick = { navController.navigate("study_plan_form") }

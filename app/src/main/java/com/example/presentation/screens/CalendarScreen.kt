@@ -14,13 +14,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.presentation.components.AppCard
 import com.example.presentation.components.EmptyState
 import com.example.presentation.components.TaskCard
 import com.example.presentation.viewmodel.CalendarViewModel
+import com.example.presentation.viewmodel.EventType
 import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -34,7 +34,6 @@ fun CalendarScreen(
     viewModel: CalendarViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-
     val calendar = Calendar.getInstance()
     calendar.timeInMillis = System.currentTimeMillis()
     
@@ -96,11 +95,26 @@ fun CalendarScreen(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(dayFormat.format(Date(dayMillis)), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = textCol)
                         
-                        // Indicators (just simple dots)
-                        val hasTasks = state.tasks.any { isSameDay(it.date ?: 0L, dayMillis) }
-                        if (hasTasks) {
+                        // Indicators
+                        val dayStart = getStartOfDay(dayMillis)
+                        val types = state.daysWithEvents[dayStart] ?: emptyList()
+                        
+                        if (types.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(4.dp))
-                            Box(modifier = Modifier.size(4.dp).clip(RoundedCornerShape(50)).background(if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary))
+                            Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                                types.take(3).forEach { type ->
+                                    val color = when (type) {
+                                        EventType.EXAM -> Color.Red
+                                        EventType.GOAL -> Color(0xFFD97706)
+                                        EventType.SIMULATION -> Color(0xFF8B5CF6)
+                                        EventType.ESSAY -> Color(0xFFEC4899)
+                                        EventType.REVIEW -> Color(0xFF3B82F6)
+                                        EventType.SESSION -> Color(0xFF10B981)
+                                        EventType.TASK -> Color.Gray
+                                    }
+                                    Box(modifier = Modifier.size(4.dp).clip(RoundedCornerShape(50)).background(color))
+                                }
+                            }
                         }
                     }
                 }
@@ -114,62 +128,74 @@ fun CalendarScreen(
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                if (state.examsForSelectedDate.isNotEmpty()) {
-                    item {
-                        Text("Provas", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                    }
-                    items(state.examsForSelectedDate) { exam ->
-                        AppCard(containerColor = Color(0xFFFEF3C7)) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text("⚠️ Prova de ${exam.name}", fontWeight = FontWeight.Bold, color = Color(0xFFD97706))
-                                Text(exam.examContent, style = MaterialTheme.typography.bodySmall, color = Color(0xFFB45309))
-                            }
-                        }
-                    }
-                }
-                
-                if (state.tasksForSelectedDate.isNotEmpty()) {
-                    val pending = state.tasksForSelectedDate.filter { it.status != "completed" }
-                    val completed = state.tasksForSelectedDate.filter { it.status == "completed" }
-                    
-                    if (pending.isNotEmpty()) {
-                        item {
-                            Text("Tarefas Pendentes", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                        }
-                        items(pending) { task ->
-                            val subject = state.subjects.find { it.id == task.subjectId }
-                            Box(modifier = Modifier.clickable { navController.navigate("task_form?taskId=${task.id}") }) {
-                                TaskCard(
-                                    title = task.title, 
-                                    subject = subject?.name ?: "Sem matéria", 
-                                    time = "${task.estimatedMinutes} min", 
-                                    isCompleted = false, 
-                                    onToggle = { /* Not directly toggling here, or could add toggle action in viewModel */ }
-                                )
-                            }
-                        }
-                    }
-                    
-                    if (completed.isNotEmpty()) {
-                        item {
-                            Text("Tarefas Concluídas", style = MaterialTheme.typography.titleSmall, color = Color(0xFF10B981), fontWeight = FontWeight.Bold)
-                        }
-                        items(completed) { task ->
-                            val subject = state.subjects.find { it.id == task.subjectId }
-                            TaskCard(
-                                title = task.title, 
-                                subject = subject?.name ?: "Sem matéria", 
-                                time = "${task.estimatedMinutes} min", 
-                                isCompleted = true, 
-                                onToggle = { }
-                            )
-                        }
-                    }
-                } else if (state.examsForSelectedDate.isEmpty()) {
+                if (state.eventsForSelectedDate.isEmpty()) {
                     item {
                         EmptyState(icon = "🏖️", title = "Dia livre", description = "Você não tem atividades agendadas para este dia.")
                     }
+                } else {
+                    val groupedEvents = state.eventsForSelectedDate.groupBy { it.type }
+                    
+                    // High priority first (Exams, Goals, Simulations)
+                    listOf(EventType.EXAM, EventType.GOAL, EventType.SIMULATION).forEach { type ->
+                        val evts = groupedEvents[type]
+                        if (!evts.isNullOrEmpty()) {
+                            items(evts) { ev ->
+                                EventCard(ev)
+                            }
+                        }
+                    }
+
+                    // Medium priority (Essays, Reviews)
+                    listOf(EventType.ESSAY, EventType.REVIEW).forEach { type ->
+                        val evts = groupedEvents[type]
+                        if (!evts.isNullOrEmpty()) {
+                            items(evts) { ev ->
+                                EventCard(ev)
+                            }
+                        }
+                    }
+                    
+                    // Low priority (Tasks, Sessions)
+                    listOf(EventType.TASK, EventType.SESSION).forEach { type ->
+                        val evts = groupedEvents[type]
+                        if (!evts.isNullOrEmpty()) {
+                            items(evts) { ev ->
+                                EventCard(ev)
+                            }
+                        }
+                    }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun EventCard(event: com.example.presentation.viewmodel.CalendarEvent) {
+    val color = when (event.type) {
+        EventType.EXAM -> Color(0xFFFEE2E2)
+        EventType.GOAL -> Color(0xFFFEF3C7)
+        EventType.SIMULATION -> Color(0xFFEDE9FE)
+        EventType.ESSAY -> Color(0xFFFCE7F3)
+        EventType.REVIEW -> Color(0xFFDBEAFE)
+        EventType.SESSION -> Color(0xFFD1FAE5)
+        EventType.TASK -> MaterialTheme.colorScheme.surface
+    }
+    val contentColor = when (event.type) {
+        EventType.EXAM -> Color(0xFFDC2626)
+        EventType.GOAL -> Color(0xFFD97706)
+        EventType.SIMULATION -> Color(0xFF8B5CF6)
+        EventType.ESSAY -> Color(0xFFEC4899)
+        EventType.REVIEW -> Color(0xFF2563EB)
+        EventType.SESSION -> Color(0xFF059669)
+        EventType.TASK -> MaterialTheme.colorScheme.onSurface
+    }
+    
+    AppCard(containerColor = color) {
+        Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+            Column {
+                Text(event.title, fontWeight = FontWeight.Bold, color = contentColor)
+                Text(if (event.isCompleted) "Concluído" else "Pendente", style = MaterialTheme.typography.bodySmall, color = contentColor.copy(alpha = 0.7f))
             }
         }
     }
@@ -180,4 +206,14 @@ fun isSameDay(time1: Long, time2: Long): Boolean {
     val cal2 = Calendar.getInstance().apply { timeInMillis = time2 }
     return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
            cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
+}
+
+fun getStartOfDay(time: Long): Long {
+    return Calendar.getInstance().apply {
+        timeInMillis = time
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
 }

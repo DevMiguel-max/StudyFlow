@@ -7,8 +7,10 @@ import androidx.room.PrimaryKey
 data class EssaySubmission(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val themeId: Int,
-    val writtenText: String,
+    val text: String,
     val date: Long,
-    val timeSpentMinutes: Int,
-    val futureGrade: Float? = null // Future AI grading
+    val timeSpentSeconds: Int,
+    val status: String, // "draft", "completed", "sent", "graded"
+    val wordCount: Int = 0,
+    val charCount: Int = 0
 )

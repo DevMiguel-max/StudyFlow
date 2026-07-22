@@ -26,7 +26,7 @@ fun AppNavigation() {
                         currentRoute?.startsWith("subjects") == true ||
                         currentRoute?.startsWith("calendar") == true ||
                         currentRoute?.startsWith("study_methods") == true ||
-                        currentRoute?.startsWith("profile") == true
+                        currentRoute?.startsWith("profile") == true || currentRoute?.startsWith("statistics") == true
 
     Scaffold(
         bottomBar = {
@@ -133,12 +133,38 @@ fun AppNavigation() {
                 TimeBlockingScreen(navController)
             }
 
-            // Future Phases (4+)
-            composable("preparation") { PlaceholderScreen(navController, "Preparação") }
+            // Phase 6
+            composable("preparation") { PreparationScreen(navController) }
+            composable("exam_goal_form") { ExamGoalFormScreen(navController) }
             composable("enem") { PlaceholderScreen(navController, "ENEM") }
             composable("vestibulares") { PlaceholderScreen(navController, "Vestibulares") }
-            composable("essay") { PlaceholderScreen(navController, "Redação") }
-            composable("simulations") { PlaceholderScreen(navController, "Simulados") }
+            composable("essay_module") { EssayModuleScreen(navController) }
+            composable("essay_themes") { EssayThemesScreen(navController) }
+            
+            composable(
+                route = "essay_editor/{submissionId}?themeId={themeId}",
+                arguments = listOf(
+                    navArgument("submissionId") { type = NavType.IntType },
+                    navArgument("themeId") { type = NavType.IntType; defaultValue = -1 }
+                )
+            ) { backStackEntry ->
+                val submissionId = backStackEntry.arguments?.getInt("submissionId") ?: -1
+                val themeId = backStackEntry.arguments?.getInt("themeId") ?: -1
+                EssayEditorScreen(navController, submissionId, themeId)
+            }
+            
+            composable(
+                route = "essay_result/{submissionId}",
+                arguments = listOf(navArgument("submissionId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val submissionId = backStackEntry.arguments?.getInt("submissionId") ?: -1
+                EssayResultScreen(navController, submissionId)
+            }
+            
+            composable("simulations") { SimulationsScreen(navController) }
+            composable("concursos") { PlaceholderScreen(navController, "Concursos") }
+            composable("faculdade") { PlaceholderScreen(navController, "Faculdade") }
+            composable("editais") { PlaceholderScreen(navController, "Análise de Editais") }
         }
     }
 }

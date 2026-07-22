@@ -110,7 +110,7 @@ fun AppBottomBar(navController: NavController) {
         BottomNavItem("home", Icons.Default.Home, "Início"),
         BottomNavItem("subjects", Icons.Default.Book, "Matérias"),
         BottomNavItem("calendar", Icons.Default.CalendarMonth, "Agenda"),
-        BottomNavItem("study_methods", Icons.Default.Lightbulb, "Métodos"),
+        BottomNavItem("statistics", Icons.Default.BarChart, "Estatísticas"),
         BottomNavItem("profile", Icons.Default.Person, "Perfil")
     )
     

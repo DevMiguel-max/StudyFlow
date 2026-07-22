@@ -6,8 +6,11 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "simulations")
 data class Simulation(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val examType: String,
+    val name: String,
+    val examType: String, // ENEM, Vestibular, etc.
+    val date: Long,
     val totalQuestions: Int,
     val correctAnswers: Int,
-    val date: Long
+    val wrongAnswers: Int,
+    val score: Float
 )

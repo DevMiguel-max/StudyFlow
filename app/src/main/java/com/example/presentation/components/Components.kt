@@ -1,6 +1,7 @@
 package com.example.presentation.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -94,3 +95,15 @@ fun ModernFAB(
         Icon(icon, contentDescription = contentDescription, modifier = Modifier.size(28.dp))
     }
 }
+
+@Composable
+fun ModuleCard(title: String, icon: String, color: Color, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    AppCard(containerColor = color, modifier = modifier.clickable { onClick() }) {
+        Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(icon, style = MaterialTheme.typography.displaySmall)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(title, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+

@@ -212,57 +212,6 @@ fun TasksScreen(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun StatisticsScreen(
-    navController: NavController,
-    viewModel: HomeViewModel = koinViewModel()
-) {
-    val state by viewModel.state.collectAsState()
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Estatísticas", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text("Visão Geral Hoje", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                AppCard(modifier = Modifier.weight(1f), containerColor = MaterialTheme.colorScheme.primaryContainer) {
-                    Column(modifier = Modifier.padding(16.dp), horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
-                        Text("⏳", style = MaterialTheme.typography.headlineMedium)
-                        Text("Estudado", style = MaterialTheme.typography.labelSmall)
-                        Text("${state.timeStudiedTodayMinutes} min", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    }
-                }
-                AppCard(modifier = Modifier.weight(1f), containerColor = MaterialTheme.colorScheme.secondaryContainer) {
-                    Column(modifier = Modifier.padding(16.dp), horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
-                        Text("🏆", style = MaterialTheme.typography.headlineMedium)
-                        Text("Sessões", style = MaterialTheme.typography.labelSmall)
-                        Text("${state.totalSessionsCompleted}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-            
-            AppCard(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Técnica Favorita", style = MaterialTheme.typography.labelSmall)
-                    Text(state.lastTechniqueUsed?.name ?: "Nenhuma", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

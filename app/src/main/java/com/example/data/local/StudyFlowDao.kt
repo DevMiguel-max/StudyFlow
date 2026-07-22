@@ -101,4 +101,99 @@ interface StudyFlowDao {
 
     @Query("SELECT * FROM mind_map_nodes WHERE subjectId = :subjectId")
     fun getMindMapNodesBySubject(subjectId: Int): Flow<List<MindMapNode>>
+
+    // Phase 6 Entities
+    @Query("SELECT * FROM exam_goals ORDER BY examDate ASC")
+    fun getAllExamGoals(): Flow<List<ExamGoal>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertExamGoal(examGoal: ExamGoal): Long
+
+    @Query("SELECT * FROM essay_themes ORDER BY createdAt DESC")
+    fun getAllEssayThemes(): Flow<List<EssayTheme>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertEssayTheme(theme: EssayTheme): Long
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertEssayThemes(themes: List<EssayTheme>)
+
+    @Query("SELECT * FROM motivational_texts WHERE themeId = :themeId ORDER BY displayOrder ASC")
+    suspend fun getMotivationalTextsForTheme(themeId: Int): List<MotivationalText>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMotivationalText(text: MotivationalText): Long
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMotivationalTexts(texts: List<MotivationalText>)
+
+    @Query("SELECT * FROM essay_submissions ORDER BY date DESC")
+    fun getAllEssaySubmissions(): Flow<List<EssaySubmission>>
+
+    @Query("SELECT * FROM essay_corrections")
+    fun getAllEssayCorrections(): Flow<List<EssayCorrection>>
+    
+    @Query("SELECT * FROM essay_submissions WHERE id = :id")
+    suspend fun getEssaySubmissionById(id: Int): EssaySubmission?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertEssaySubmission(submission: EssaySubmission): Long
+    
+    @Update
+    suspend fun updateEssaySubmission(submission: EssaySubmission)
+
+    @Query("SELECT * FROM essay_corrections WHERE submissionId = :submissionId LIMIT 1")
+    suspend fun getEssayCorrectionForSubmission(submissionId: Int): EssayCorrection?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertEssayCorrection(correction: EssayCorrection): Long
+
+    @Query("SELECT * FROM simulations ORDER BY date DESC")
+    fun getAllSimulations(): Flow<List<Simulation>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSimulation(simulation: Simulation): Long
+
+    // Global Migration Entities
+    @Query("SELECT * FROM study_goals ORDER BY priority DESC, date ASC")
+    fun getAllStudyGoals(): Flow<List<StudyGoal>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertStudyGoal(goal: StudyGoal): Long
+    
+    @Update
+    suspend fun updateStudyGoal(goal: StudyGoal)
+
+    @Delete
+    suspend fun deleteStudyGoal(goal: StudyGoal)
+
+    @Query("SELECT * FROM exam_notices WHERE goalId = :goalId ORDER BY publicationDate DESC")
+    fun getExamNoticesForGoal(goalId: Int): Flow<List<ExamNotice>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertExamNotice(notice: ExamNotice): Long
+
+    @Query("SELECT * FROM exam_notice_versions WHERE noticeId = :noticeId ORDER BY versionNumber DESC")
+    fun getExamNoticeVersions(noticeId: Int): Flow<List<ExamNoticeVersion>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertExamNoticeVersion(version: ExamNoticeVersion): Long
+
+    @Query("SELECT * FROM exam_notice_subjects WHERE noticeId = :noticeId")
+    fun getExamNoticeSubjects(noticeId: Int): Flow<List<ExamNoticeSubject>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertExamNoticeSubject(subject: ExamNoticeSubject): Long
+
+    @Query("SELECT * FROM study_documents ORDER BY importDate DESC")
+    fun getAllStudyDocuments(): Flow<List<StudyDocument>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertStudyDocument(document: StudyDocument): Long
+
+    @Query("SELECT * FROM document_analysis WHERE documentId = :documentId LIMIT 1")
+    suspend fun getDocumentAnalysis(documentId: Int): DocumentAnalysis?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDocumentAnalysis(analysis: DocumentAnalysis): Long
 }

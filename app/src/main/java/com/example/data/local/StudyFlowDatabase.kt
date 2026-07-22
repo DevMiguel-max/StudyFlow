@@ -8,22 +8,31 @@ import androidx.room.RoomDatabase
         Subject::class,
         Task::class,
         StudyMethod::class,
-        Goal::class,
+        Goal::class, // The old one
         Achievement::class,
         UserProfile::class,
-        ExamGoal::class,
+        ExamGoal::class, // The older Phase 6 one, keeping for compatibility
         EssayTheme::class,
         MotivationalText::class,
         EssaySubmission::class,
+        EssayCorrection::class,
         Simulation::class,
         StudyPlan::class,
         StudySession::class,
         ReviewSchedule::class,
         Flashcard::class,
         StudyNote::class,
-        MindMapNode::class
+        MindMapNode::class,
+        
+        // New Global Migration Entities
+        StudyGoal::class,
+        ExamNotice::class,
+        ExamNoticeVersion::class,
+        ExamNoticeSubject::class,
+        StudyDocument::class,
+        DocumentAnalysis::class
     ],
-    version = 4,
+    version = 6,
     exportSchema = false
 )
 abstract class StudyFlowDatabase : RoomDatabase() {
