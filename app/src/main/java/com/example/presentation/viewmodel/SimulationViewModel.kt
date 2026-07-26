@@ -16,7 +16,7 @@ data class SimulationState(
     val isLoading: Boolean = false
 )
 
-class SimulationViewModel(private val repository: StudyFlowRepository) : ViewModel() {
+class SimulationViewModel(private val repository: StudyFlowRepository, private val gamificationManager: com.example.domain.manager.GamificationManager) : ViewModel() {
 
     private val _state = MutableStateFlow(SimulationState())
     val state: StateFlow<SimulationState> = combine(
@@ -42,6 +42,7 @@ class SimulationViewModel(private val repository: StudyFlowRepository) : ViewMod
 
         viewModelScope.launch {
             repository.insertSimulation(simulation)
+            gamificationManager.completeAction("SIMULATION_COMPLETED")
         }
     }
 }

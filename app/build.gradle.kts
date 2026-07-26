@@ -11,11 +11,11 @@ plugins {
 }
 
 android {
-  namespace = "com.example"
+  namespace = "com.studyflow.app"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
   defaultConfig {
-    applicationId = "com.aistudio.studyflow.xkqtzm"
+    applicationId = "com.studyflow.app"
     minSdk = 24
     targetSdk = 36
     versionCode = 1
@@ -72,6 +72,7 @@ googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.W
 // Some unused dependencies are commented out below instead of being removed.
 // This makes it easy to add them back in the future if needed.
 dependencies {
+  implementation("com.tom-roush:pdfbox-android:2.0.27.0")
   implementation(platform(libs.androidx.compose.bom))
   implementation(platform(libs.firebase.bom))
   // implementation(libs.accompanist.permissions)
@@ -96,17 +97,17 @@ dependencies {
   implementation(libs.androidx.room.runtime)
   implementation(libs.coil.compose)
   implementation(libs.converter.moshi)
-  implementation(libs.firebase.ai)
+  implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
   // Uncomment to use Firestore:
-  // implementation(libs.firebase.firestore)
+  implementation(libs.firebase.firestore)
 
   // Firebase Auth with Google Sign-In requires all of the following to be uncommented together.
   // If you are using Firebase Auth with other providers (e.g. Email/Password), you may only need
   // firebase-auth.
-  // implementation(libs.firebase.auth)
-  // implementation(libs.androidx.credentials)
-  // implementation(libs.androidx.credentials.play.services)
-  // implementation(libs.googleid)
+  implementation(libs.firebase.auth)
+  implementation(libs.androidx.credentials)
+  implementation(libs.androidx.credentials.play.services)
+  implementation(libs.googleid)
   implementation(libs.firebase.appcheck.recaptcha)
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
@@ -115,6 +116,7 @@ dependencies {
   implementation(libs.okhttp)
   // implementation(libs.play.services.location)
   implementation(libs.retrofit)
+  implementation(libs.retrofit.kotlinx.serialization)
   
   // New Dependencies for StudyFlow
   implementation(libs.koin.android)
@@ -142,4 +144,6 @@ dependencies {
   debugImplementation(libs.androidx.compose.ui.tooling)
   "ksp"(libs.androidx.room.compiler)
   "ksp"(libs.moshi.kotlin.codegen)
+  implementation(libs.firebase.analytics)
+  implementation("com.github.jeziellago:compose-markdown:0.5.0")
 }

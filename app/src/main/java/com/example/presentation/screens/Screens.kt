@@ -213,17 +213,3 @@ fun TasksScreen(
 
 
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SettingsScreen(navController: NavController) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Configurações", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-            )
-        }
-    ) { padding ->
-        EmptyState(icon = "⚙️", title = "Configurações", description = "Em desenvolvimento.")
-    }
-}

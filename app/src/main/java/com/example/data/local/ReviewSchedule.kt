@@ -6,6 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "review_schedules")
 data class ReviewSchedule(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val updatedAt: Long = System.currentTimeMillis(),
     val subjectId: Int,
     val topic: String,
     val reviewDate: Long,

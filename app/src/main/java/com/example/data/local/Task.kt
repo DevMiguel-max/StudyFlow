@@ -19,6 +19,7 @@ import androidx.room.PrimaryKey
 )
 data class Task(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val updatedAt: Long = System.currentTimeMillis(),
     val subjectId: Int,
     val title: String,
     val description: String = "",

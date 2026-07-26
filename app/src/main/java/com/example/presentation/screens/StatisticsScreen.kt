@@ -37,7 +37,7 @@ fun StatisticsScreen(
     Scaffold(
         topBar = {
             Column {
-                AppTopBar(level = 15, streak = state.studyStreak, xp = 2400)
+                AppTopBar(level = state.userProfile?.level ?: 1, streak = state.userProfile?.streakDays ?: 0, xp = state.userProfile?.xp ?: 0)
                 ScrollableTabRow(
                     selectedTabIndex = selectedTab,
                     containerColor = MaterialTheme.colorScheme.background,

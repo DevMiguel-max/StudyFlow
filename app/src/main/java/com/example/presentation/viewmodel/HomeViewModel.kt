@@ -29,7 +29,8 @@ data class HomeState(
     val activePlans: List<StudyPlan> = emptyList(),
     val timeStudiedTodayMinutes: Int = 0,
     val lastTechniqueUsed: StudyMethodModel? = null,
-    val totalSessionsCompleted: Int = 0
+    val totalSessionsCompleted: Int = 0,
+    val userProfile: com.example.data.local.UserProfile? = null
 )
 
 class HomeViewModel(private val repository: StudyFlowRepository) : ViewModel() {
@@ -38,8 +39,9 @@ class HomeViewModel(private val repository: StudyFlowRepository) : ViewModel() {
         repository.getSubjects(),
         repository.getTasks(),
         repository.getStudyPlans(),
-        repository.getAllStudySessions()
-    ) { subjects, tasks, plans, sessions ->
+        repository.getAllStudySessions(),
+        repository.getUserProfile()
+    ) { subjects, tasks, plans, sessions, profile ->
         val pendingTasks = tasks.filter { it.status != "completed" }
         
         // Time calculations
@@ -99,7 +101,8 @@ class HomeViewModel(private val repository: StudyFlowRepository) : ViewModel() {
             activePlans = plans,
             timeStudiedTodayMinutes = timeStudiedToday,
             lastTechniqueUsed = lastTech,
-            totalSessionsCompleted = sessions.count { it.status == "completed" }
+            totalSessionsCompleted = sessions.count { it.status == "completed" },
+            userProfile = profile
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HomeState())
     

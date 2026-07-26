@@ -1,0 +1,1 @@
+sed -i 's/e.printStackTrace()/e.printStackTrace()\n            withContext(Dispatchers.Main) {\n                android.widget.Toast.makeText(context, "Erro no login: ${e.message}", android.widget.Toast.LENGTH_LONG).show()\n            }/g' app/src/main/java/com/example/presentation/screens/GoogleSignInHelper.kt

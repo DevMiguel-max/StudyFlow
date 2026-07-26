@@ -30,9 +30,19 @@ import androidx.room.RoomDatabase
         ExamNoticeVersion::class,
         ExamNoticeSubject::class,
         StudyDocument::class,
-        DocumentAnalysis::class
+        DocumentAnalysis::class,
+        Challenge::class,
+        AIConversation::class,
+        AIMessage::class,
+        AnalyzedDocument::class,
+        GeneratedMaterial::class,
+        GeneratedQuestion::class,
+        MentorProfile::class,
+        MentorRecommendation::class,
+        SmartMission::class,
+        MentorHistory::class
     ],
-    version = 6,
+    version = 13,
     exportSchema = false
 )
 abstract class StudyFlowDatabase : RoomDatabase() {

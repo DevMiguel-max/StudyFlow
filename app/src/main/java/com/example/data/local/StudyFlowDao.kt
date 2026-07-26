@@ -5,6 +5,48 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface StudyFlowDao {
+    @Query("SELECT * FROM generated_materials ORDER BY createdAt DESC")
+    fun getAllGeneratedMaterials(): kotlinx.coroutines.flow.Flow<List<GeneratedMaterial>>
+
+    @Query("SELECT * FROM generated_materials WHERE type = :type ORDER BY createdAt DESC")
+    fun getGeneratedMaterialsByType(type: String): kotlinx.coroutines.flow.Flow<List<GeneratedMaterial>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertGeneratedMaterial(material: GeneratedMaterial): Long
+
+    @Delete
+    suspend fun deleteGeneratedMaterial(material: GeneratedMaterial)
+
+    @Query("SELECT * FROM generated_questions ORDER BY createdAt DESC")
+    fun getAllGeneratedQuestions(): kotlinx.coroutines.flow.Flow<List<GeneratedQuestion>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertGeneratedQuestion(question: GeneratedQuestion): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertGeneratedQuestions(questions: List<GeneratedQuestion>)
+
+    @Update
+    suspend fun updateGeneratedQuestion(question: GeneratedQuestion)
+
+    @Delete
+    suspend fun deleteGeneratedQuestion(question: GeneratedQuestion)
+
+    @Query("SELECT * FROM analyzed_documents ORDER BY importDate DESC")
+    fun getAllAnalyzedDocuments(): Flow<List<AnalyzedDocument>>
+
+    @Query("SELECT * FROM analyzed_documents WHERE id = :id")
+    suspend fun getAnalyzedDocumentById(id: Int): AnalyzedDocument?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAnalyzedDocument(doc: AnalyzedDocument): Long
+
+    @Update
+    suspend fun updateAnalyzedDocument(doc: AnalyzedDocument)
+
+    @Delete
+    suspend fun deleteAnalyzedDocument(doc: AnalyzedDocument)
+
     @Query("SELECT 1")
     suspend fun ping(): Int
 
@@ -83,6 +125,8 @@ interface StudyFlowDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFlashcard(flashcard: Flashcard): Long
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertFlashcards(flashcards: List<Flashcard>)
 
     @Query("SELECT * FROM flashcards WHERE subjectId = :subjectId")
     fun getFlashcardsBySubject(subjectId: Int): Flow<List<Flashcard>>
@@ -196,4 +240,99 @@ interface StudyFlowDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDocumentAnalysis(analysis: DocumentAnalysis): Long
+
+    // GAMIFICATION
+    @Query("SELECT * FROM user_profile LIMIT 1")
+    fun getUserProfile(): kotlinx.coroutines.flow.Flow<UserProfile?>
+
+    @androidx.room.Query("SELECT * FROM user_profile LIMIT 1")
+    suspend fun getUserProfileSync(): UserProfile?
+
+    @Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
+    suspend fun insertUserProfile(userProfile: UserProfile)
+
+    @Update
+    suspend fun updateUserProfile(userProfile: UserProfile)
+
+    @Query("SELECT * FROM achievements")
+    fun getAllAchievements(): kotlinx.coroutines.flow.Flow<List<Achievement>>
+
+    @Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
+    suspend fun insertAchievements(achievements: List<Achievement>)
+
+    @Update
+    suspend fun updateAchievement(achievement: Achievement)
+
+    @Query("SELECT * FROM challenges")
+    fun getAllChallenges(): kotlinx.coroutines.flow.Flow<List<Challenge>>
+
+    @Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
+    suspend fun insertChallenges(challenges: List<Challenge>)
+
+    @Update
+    suspend fun updateChallenge(challenge: Challenge)
+    
+    @Query("DELETE FROM challenges WHERE type = :type")
+    suspend fun deleteChallengesByType(type: String)
+
+    // AI Chat
+    @Query("SELECT * FROM ai_conversations WHERE isArchived = 0 ORDER BY updatedAt DESC")
+    fun getActiveAIConversations(): kotlinx.coroutines.flow.Flow<List<AIConversation>>
+
+    @Query("SELECT * FROM ai_conversations WHERE id = :id LIMIT 1")
+    suspend fun getAIConversationById(id: Long): AIConversation?
+
+    @Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
+    suspend fun insertAIConversation(conversation: AIConversation): Long
+
+    @Update
+    suspend fun updateAIConversation(conversation: AIConversation)
+
+    @Delete
+    suspend fun deleteAIConversation(conversation: AIConversation)
+
+    @Query("SELECT * FROM ai_messages WHERE conversationId = :conversationId ORDER BY timestamp ASC")
+    fun getAIMessages(conversationId: Long): kotlinx.coroutines.flow.Flow<List<AIMessage>>
+
+    @Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
+    suspend fun insertAIMessage(message: AIMessage): Long
+
+    @Query("DELETE FROM ai_messages WHERE conversationId = :conversationId")
+    suspend fun deleteAIMessages(conversationId: Long)
+
+
+
+    // Mentor
+    @androidx.room.Query("SELECT * FROM mentor_profile WHERE id = 1")
+    fun getMentorProfile(): kotlinx.coroutines.flow.Flow<MentorProfile?>
+
+    @androidx.room.Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
+    suspend fun insertMentorProfile(profile: MentorProfile)
+
+    @androidx.room.Query("SELECT * FROM mentor_recommendation ORDER BY timestamp DESC")
+    fun getAllMentorRecommendations(): kotlinx.coroutines.flow.Flow<List<MentorRecommendation>>
+    
+    @androidx.room.Query("SELECT * FROM mentor_recommendation WHERE isRead = 0 ORDER BY timestamp DESC")
+    fun getUnreadMentorRecommendations(): kotlinx.coroutines.flow.Flow<List<MentorRecommendation>>
+
+    @androidx.room.Insert
+    suspend fun insertMentorRecommendation(recommendation: MentorRecommendation)
+
+    @androidx.room.Update
+    suspend fun updateMentorRecommendation(recommendation: MentorRecommendation)
+
+    @androidx.room.Query("SELECT * FROM smart_mission WHERE isCompleted = 0 ORDER BY timestamp DESC")
+    fun getActiveSmartMissions(): kotlinx.coroutines.flow.Flow<List<SmartMission>>
+
+    @androidx.room.Insert
+    suspend fun insertSmartMission(mission: SmartMission)
+
+    @androidx.room.Update
+    suspend fun updateSmartMission(mission: SmartMission)
+
+    @androidx.room.Query("SELECT * FROM mentor_history ORDER BY timestamp DESC")
+    fun getMentorHistory(): kotlinx.coroutines.flow.Flow<List<MentorHistory>>
+
+    @androidx.room.Insert
+    suspend fun insertMentorHistory(history: MentorHistory)
 }

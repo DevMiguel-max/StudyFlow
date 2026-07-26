@@ -36,7 +36,7 @@ fun HomeScreen(
             .background(MaterialTheme.colorScheme.background)
     ) {
         item {
-            AppTopBar(level = 12, streak = 14, xp = 1200)
+            AppTopBar(level = state.userProfile?.level ?: 1, streak = state.userProfile?.streakDays ?: 0, xp = state.userProfile?.xp ?: 0)
         }
         
         item {
@@ -149,6 +149,16 @@ fun HomeScreen(
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     ModuleCard(title = "Métodos", icon = "🧠", color = Color(0xFFFEF3C7), modifier = Modifier.weight(1f)) { navController.navigate("study_methods") }
                     ModuleCard(title = "Sessões", icon = "🏆", color = Color(0xFFE0E7FF), modifier = Modifier.weight(1f)) { navController.navigate("tasks") }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    ModuleCard(title = "StudyFlow AI", icon = "🤖", color = Color(0xFFFEE2E2), modifier = Modifier.weight(1f)) { navController.navigate("ai_tutor") }
+                    ModuleCard(title = "Estatísticas", icon = "📈", color = Color(0xFFE0E7FF), modifier = Modifier.weight(1f)) { navController.navigate("statistics") }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    ModuleCard(title = "Mentor AI", icon = "🧙‍♂️", color = Color(0xFFE5E7EB), modifier = Modifier.weight(1f)) { navController.navigate("mentor") }
+                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
         }

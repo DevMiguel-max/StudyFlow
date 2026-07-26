@@ -41,7 +41,7 @@ fun AppNavigation() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = "onboarding",
+            startDestination = "login",
             modifier = Modifier.padding(innerPadding),
             enterTransition = { fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 0.95f) },
             exitTransition = { fadeOut(animationSpec = tween(300)) },
@@ -49,7 +49,13 @@ fun AppNavigation() {
             popExitTransition = { fadeOut(animationSpec = tween(300)) + scaleOut(targetScale = 0.95f) }
         ) {
             composable("onboarding") { OnboardingScreen(navController) }
+            composable("login") { LoginScreen(navController) }
+            composable("signup") { SignUpScreen(navController) }
+            composable("recover_password") { RecoverPasswordScreen(navController) }
+
             composable("home") { HomeScreen(navController) }
+            composable("mentor") { com.example.presentation.screens.MentorScreen(onNavigateBack = { navController.popBackStack() }) }
+        composable("ai_tutor") { com.example.presentation.screens.AITutorScreen(navController) }
             composable("subjects") { SubjectsScreen(navController) }
             
             composable(
@@ -164,7 +170,8 @@ fun AppNavigation() {
             composable("simulations") { SimulationsScreen(navController) }
             composable("concursos") { PlaceholderScreen(navController, "Concursos") }
             composable("faculdade") { PlaceholderScreen(navController, "Faculdade") }
-            composable("editais") { PlaceholderScreen(navController, "Análise de Editais") }
+            composable("editais") { com.example.presentation.screens.DocumentAnalyzerScreen(navController) }
+            composable("material_generator") { com.example.presentation.screens.MaterialGeneratorScreen(navController) }
         }
     }
 }

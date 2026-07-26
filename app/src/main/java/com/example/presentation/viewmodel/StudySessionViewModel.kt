@@ -20,7 +20,7 @@ data class SessionState(
     val subjects: List<Subject> = emptyList()
 )
 
-class StudySessionViewModel(private val repository: StudyFlowRepository) : ViewModel() {
+class StudySessionViewModel(private val repository: StudyFlowRepository, private val gamificationManager: com.example.domain.manager.GamificationManager) : ViewModel() {
     private val _state = MutableStateFlow(SessionState())
     val state: StateFlow<SessionState> = combine(
         _state,

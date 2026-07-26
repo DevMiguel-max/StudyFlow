@@ -6,6 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "study_goals")
 data class StudyGoal(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val updatedAt: Long = System.currentTimeMillis(),
     val type: String, // "Escola", "ENEM", "Vestibular", "Concurso", "Faculdade", "Certificação", "Idioma", "Personalizado"
     val title: String,
     val description: String? = null,

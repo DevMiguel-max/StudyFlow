@@ -6,6 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "essay_submissions")
 data class EssaySubmission(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val updatedAt: Long = System.currentTimeMillis(),
     val themeId: Int,
     val text: String,
     val date: Long,

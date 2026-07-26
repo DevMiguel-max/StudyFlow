@@ -16,5 +16,14 @@ data class EssayCorrection(
     val strengths: String,
     val weaknesses: String,
     val suggestions: String,
-    val date: Long
+    val date: Long,
+    
+    val generalComment: String = "",
+    val essayLevel: String = "",
+    val performanceEstimate: String = "",
+    val revisedVersion: String = "",
+    val detailedAnalysisJson: String = "",
+    val competenciesDetailsJson: String = "",
+    val modelUsed: String = "meta/llama3-70b-instruct",
+    val isDetailed: Boolean = true
 )

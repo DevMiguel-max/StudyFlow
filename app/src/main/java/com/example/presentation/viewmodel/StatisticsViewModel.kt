@@ -37,7 +37,8 @@ data class StatisticsState(
     val goalStats: List<GoalStat> = emptyList(),
     
     // Insights
-    val insights: List<String> = emptyList()
+    val insights: List<String> = emptyList(),
+    val userProfile: com.example.data.local.UserProfile? = null
 )
 
 data class SubjectStat(
@@ -94,6 +95,7 @@ class StatisticsViewModel(private val repository: StudyFlowRepository) : ViewMod
         viewModelScope.launch {
             combine(
                 repository.getAllStudySessions(),
+        repository.getUserProfile(),
                 repository.getAllStudyGoals(),
                 repository.getSubjects(),
                 repository.getTasks(),
@@ -101,16 +103,18 @@ class StatisticsViewModel(private val repository: StudyFlowRepository) : ViewMod
                 repository.getAllEssaySubmissions(),
                 repository.getAllSimulations(),
                 repository.getAllEssayCorrections()
-            ) { args: Array<Any> ->
+                        ) { args: Array<Any?> ->
                 val sessions = args[0] as List<StudySession>
-                val goals = args[1] as List<StudyGoal>
-                val subjects = args[2] as List<Subject>
-                val tasks = args[3] as List<Task>
-                val reviews = args[4] as List<ReviewSchedule>
-                val essays = args[5] as List<EssaySubmission>
-                val simulations = args[6] as List<Simulation>
-                val corrections = args[7] as List<EssayCorrection>
-                computeStats(sessions, goals, subjects, tasks, reviews, essays, simulations, corrections)
+                val profile = args[1] as? com.example.data.local.UserProfile
+                val goals = args[2] as List<StudyGoal>
+                val subjects = args[3] as List<Subject>
+                val tasks = args[4] as List<Task>
+                val reviews = args[5] as List<ReviewSchedule>
+                val essays = args[6] as List<EssaySubmission>
+                val simulations = args[7] as List<Simulation>
+                val corrections = args[8] as List<EssayCorrection>
+                val newState = computeStats(sessions, goals, subjects, tasks, reviews, essays, simulations, corrections)
+                newState.copy(userProfile = profile)
             }.collect { newState ->
                 _state.value = newState
             }

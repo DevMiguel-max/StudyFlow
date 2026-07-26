@@ -5,6 +5,14 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "achievements")
 data class Achievement(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val name: String = ""
+    @PrimaryKey val id: String,
+    val title: String,
+    val description: String,
+    val icon: String,
+    val tier: String, // "Bronze", "Prata", "Ouro", "Diamante"
+    val category: String,
+    val progress: Int = 0,
+    val maxProgress: Int = 1,
+    val isUnlocked: Boolean = false,
+    val unlockedAt: Long? = null
 )

@@ -22,7 +22,7 @@ data class TaskState(
     val isLoading: Boolean = false
 )
 
-class TaskViewModel(private val repository: StudyFlowRepository) : ViewModel() {
+class TaskViewModel(private val repository: StudyFlowRepository, private val gamificationManager: com.example.domain.manager.GamificationManager) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
     private val _filterState = MutableStateFlow(TaskFilterState())

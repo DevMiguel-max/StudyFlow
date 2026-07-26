@@ -1,0 +1,3 @@
+sed -i 's/val optionsStr = Json.encodeToString(kotlinx.serialization.builtins.ListSerializer(kotlinx.serialization.builtins.serializer()), optionsList)/val optionsStr = Json.encodeToString(kotlinx.serialization.serializer(), optionsList)/g' app/src/main/java/com/example/domain/ai/MaterialGeneratorService.kt
+sed -i 's/val optionsStr = Json.encodeToString.*/val optionsStr = kotlinx.serialization.encodeToString(optionsList)/g' app/src/main/java/com/example/domain/ai/MaterialGeneratorService.kt
+sed -i '/import kotlinx.serialization.json.Json/a \import kotlinx.serialization.encodeToString' app/src/main/java/com/example/domain/ai/MaterialGeneratorService.kt

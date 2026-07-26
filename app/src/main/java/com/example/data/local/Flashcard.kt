@@ -10,5 +10,10 @@ data class Flashcard(
     val question: String,
     val answer: String,
     val box: Int = 1, // 1 to 3 for Leitner
-    val nextReviewDate: Long
+    val nextReviewDate: Long,
+    val category: String? = null,
+    val topic: String? = null,
+    val difficulty: String? = null,
+    val source: String? = null,
+    val createdAt: Long = System.currentTimeMillis()
 )

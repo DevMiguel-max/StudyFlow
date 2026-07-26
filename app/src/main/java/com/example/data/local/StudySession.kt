@@ -6,6 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "study_sessions")
 data class StudySession(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val updatedAt: Long = System.currentTimeMillis(),
     val subjectId: Int,
     val taskId: Int?,
     val techniqueUsed: String, // e.g., "pomodoro", "feynman"

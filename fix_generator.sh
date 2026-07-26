@@ -1,0 +1,1 @@
+sed -i 's/sourceReference = "Gerado via IA"/source = "Gerado via IA",\n                    nextReviewDate = System.currentTimeMillis()/' app/src/main/java/com/example/domain/ai/MaterialGeneratorService.kt

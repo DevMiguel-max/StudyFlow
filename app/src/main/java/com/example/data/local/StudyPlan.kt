@@ -6,6 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "study_plans")
 data class StudyPlan(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val updatedAt: Long = System.currentTimeMillis(),
     val name: String,
     val goal: String, // e.g. "Melhorar em uma matéria", "Preparar para ENEM"
     val subjectsInvolved: String, // comma-separated subject IDs

@@ -129,9 +129,9 @@ fun PreparationScreen(
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 ModuleCard(
-                    title = "Análise de Editais", icon = "📄", color = Color(0xFFFFF7ED), modifier = Modifier.weight(1f)
+                    title = "Análise de Documentos", icon = "📄", color = Color(0xFFFFF7ED), modifier = Modifier.weight(1f)
                 ) { navController.navigate("editais") }
-                Spacer(modifier = Modifier.weight(1f))
+                ModuleCard(title = "Gerador de Materiais", icon = "✨", color = androidx.compose.ui.graphics.Color(0xFFE0E7FF), modifier = Modifier.weight(1f)) { navController.navigate("material_generator") }
             }
         }
     }

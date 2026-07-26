@@ -79,8 +79,7 @@ fun EssayEditorScreen(
                 actions = {
                     if (!isReadOnly) {
                         IconButton(onClick = { 
-                            viewModel.saveSubmission(text, timeSpentSeconds, "sent")
-                            viewModel.requestCorrection(state.currentSubmission?.id ?: -1)
+                            viewModel.submitForCorrection(text, timeSpentSeconds)
                             navController.popBackStack()
                         }) {
                             Icon(Icons.Default.Send, contentDescription = "Enviar para Correção")

@@ -6,6 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "simulations")
 data class Simulation(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val updatedAt: Long = System.currentTimeMillis(),
     val name: String,
     val examType: String, // ENEM, Vestibular, etc.
     val date: Long,

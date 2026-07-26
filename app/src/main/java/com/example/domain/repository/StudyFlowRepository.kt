@@ -87,4 +87,30 @@ interface StudyFlowRepository {
 
     suspend fun getDocumentAnalysis(documentId: Int): DocumentAnalysis?
     suspend fun insertDocumentAnalysis(analysis: DocumentAnalysis): Long
+
+    // Gamification
+    fun getUserProfile(): kotlinx.coroutines.flow.Flow<com.example.data.local.UserProfile?>
+    suspend fun insertUserProfile(userProfile: com.example.data.local.UserProfile)
+    suspend fun updateUserProfile(userProfile: com.example.data.local.UserProfile)
+    
+    fun getAllAchievements(): kotlinx.coroutines.flow.Flow<List<com.example.data.local.Achievement>>
+    suspend fun insertAchievements(achievements: List<com.example.data.local.Achievement>)
+    suspend fun updateAchievement(achievement: com.example.data.local.Achievement)
+    
+    fun getAllChallenges(): kotlinx.coroutines.flow.Flow<List<com.example.data.local.Challenge>>
+    suspend fun insertChallenges(challenges: List<com.example.data.local.Challenge>)
+    suspend fun updateChallenge(challenge: com.example.data.local.Challenge)
+    suspend fun deleteChallengesByType(type: String)
+
+    // AI Chat
+    fun getActiveAIConversations(): kotlinx.coroutines.flow.Flow<List<AIConversation>>
+    suspend fun getAIConversationById(id: Long): AIConversation?
+    suspend fun insertAIConversation(conversation: AIConversation): Long
+    suspend fun updateAIConversation(conversation: AIConversation)
+    suspend fun deleteAIConversation(conversation: AIConversation)
+    fun getAIMessages(conversationId: Long): kotlinx.coroutines.flow.Flow<List<AIMessage>>
+    suspend fun insertAIMessage(message: AIMessage): Long
+    suspend fun deleteAIMessages(conversationId: Long)
+
+
 }

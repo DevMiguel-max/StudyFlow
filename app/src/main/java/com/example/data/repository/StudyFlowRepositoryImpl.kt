@@ -90,4 +90,30 @@ class StudyFlowRepositoryImpl(
 
     override suspend fun getDocumentAnalysis(documentId: Int): DocumentAnalysis? = dao.getDocumentAnalysis(documentId)
     override suspend fun insertDocumentAnalysis(analysis: DocumentAnalysis): Long = dao.insertDocumentAnalysis(analysis)
+
+    // Gamification
+    override fun getUserProfile() = dao.getUserProfile()
+    override suspend fun insertUserProfile(userProfile: com.example.data.local.UserProfile) = dao.insertUserProfile(userProfile)
+    override suspend fun updateUserProfile(userProfile: com.example.data.local.UserProfile) = dao.updateUserProfile(userProfile)
+    
+    override fun getAllAchievements() = dao.getAllAchievements()
+    override suspend fun insertAchievements(achievements: List<com.example.data.local.Achievement>) = dao.insertAchievements(achievements)
+    override suspend fun updateAchievement(achievement: com.example.data.local.Achievement) = dao.updateAchievement(achievement)
+    
+    override fun getAllChallenges() = dao.getAllChallenges()
+    override suspend fun insertChallenges(challenges: List<com.example.data.local.Challenge>) = dao.insertChallenges(challenges)
+    override suspend fun updateChallenge(challenge: com.example.data.local.Challenge) = dao.updateChallenge(challenge)
+    override suspend fun deleteChallengesByType(type: String) = dao.deleteChallengesByType(type)
+
+    // AI Chat
+    override fun getActiveAIConversations(): kotlinx.coroutines.flow.Flow<List<AIConversation>> = dao.getActiveAIConversations()
+    override suspend fun getAIConversationById(id: Long): AIConversation? = dao.getAIConversationById(id)
+    override suspend fun insertAIConversation(conversation: AIConversation): Long = dao.insertAIConversation(conversation)
+    override suspend fun updateAIConversation(conversation: AIConversation) = dao.updateAIConversation(conversation)
+    override suspend fun deleteAIConversation(conversation: AIConversation) = dao.deleteAIConversation(conversation)
+    override fun getAIMessages(conversationId: Long): kotlinx.coroutines.flow.Flow<List<AIMessage>> = dao.getAIMessages(conversationId)
+    override suspend fun insertAIMessage(message: AIMessage): Long = dao.insertAIMessage(message)
+    override suspend fun deleteAIMessages(conversationId: Long) = dao.deleteAIMessages(conversationId)
+
+
 }
