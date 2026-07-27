@@ -52,19 +52,25 @@ class MaterialGeneratorViewModel(
         }
         viewModelScope.launch {
             _state.value = _state.value.copy(isGenerating = true, generationMessage = "Gerando resumo ($type)...", error = null, generatedSummary = null)
-            val result = service.generateMaterial(sourceText, type)
-            if (result.startsWith("Erro")) {
-                _state.value = _state.value.copy(isGenerating = false, error = result)
-            } else {
-                // Save automatically
-                val material = GeneratedMaterial(
-                    type = type,
-                    title = title,
-                    content = result,
-                    source = "Geração Inteligente"
-                )
-                repository.insertMaterial(material)
-                _state.value = _state.value.copy(isGenerating = false, generatedSummary = result)
+            try {
+                val result = service.generateMaterial(sourceText, type)
+                if (result.startsWith("Erro")) {
+                    _state.value = _state.value.copy(error = result)
+                } else {
+                    // Save automatically
+                    val material = GeneratedMaterial(
+                        type = type,
+                        title = title,
+                        content = result,
+                        source = "Geração Inteligente"
+                    )
+                    repository.insertMaterial(material)
+                    _state.value = _state.value.copy(generatedSummary = result)
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(error = e.message ?: "Erro ao gerar resumo.")
+            } finally {
+                _state.value = _state.value.copy(isGenerating = false)
             }
         }
     }
@@ -78,13 +84,20 @@ class MaterialGeneratorViewModel(
             _state.value = _state.value.copy(isGenerating = true, generationMessage = "Gerando $count flashcards ($difficulty)...", error = null, generatedFlashcards = emptyList())
             val subjectName = subjects.value.find { it.id == subjectId }?.name ?: "Geral"
             val actualDifficulty = if (difficulty == "ADAPTATIVO") getAdaptiveDifficulty(subjectName) else difficulty
-            val flashcards = service.generateFlashcards(sourceText, count, actualDifficulty, subjectId, subjectName)
             
-            if (flashcards.isEmpty()) {
-                _state.value = _state.value.copy(isGenerating = false, error = "Não foi possível gerar os flashcards.")
-            } else {
-                repository.insertFlashcards(flashcards)
-                _state.value = _state.value.copy(isGenerating = false, generatedFlashcards = flashcards)
+            try {
+                val flashcards = service.generateFlashcards(sourceText, count, actualDifficulty, subjectId, subjectName)
+                
+                if (flashcards.isEmpty()) {
+                    _state.value = _state.value.copy(error = "Não foi possível gerar os flashcards.")
+                } else {
+                    repository.insertFlashcards(flashcards)
+                    _state.value = _state.value.copy(generatedFlashcards = flashcards)
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(error = e.message ?: "Erro ao gerar flashcards.")
+            } finally {
+                _state.value = _state.value.copy(isGenerating = false)
             }
         }
     }
@@ -98,13 +111,20 @@ class MaterialGeneratorViewModel(
             _state.value = _state.value.copy(isGenerating = true, generationMessage = "Gerando $count questões ($type)...", error = null, generatedQuestions = emptyList())
             val subjectName = subjects.value.find { it.id == subjectId }?.name ?: "Geral"
             val actualDifficulty = if (difficulty == "ADAPTATIVO") getAdaptiveDifficulty(subjectName) else difficulty
-            val questions = service.generateQuestions(sourceText, count, actualDifficulty, subjectId, subjectName)
             
-            if (questions.isEmpty()) {
-                _state.value = _state.value.copy(isGenerating = false, error = "Não foi possível gerar as questões.")
-            } else {
-                repository.insertQuestions(questions)
-                _state.value = _state.value.copy(isGenerating = false, generatedQuestions = questions)
+            try {
+                val questions = service.generateQuestions(sourceText, count, actualDifficulty, subjectId, subjectName)
+                
+                if (questions.isEmpty()) {
+                    _state.value = _state.value.copy(error = "Não foi possível gerar as questões.")
+                } else {
+                    repository.insertQuestions(questions)
+                    _state.value = _state.value.copy(generatedQuestions = questions)
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(error = e.message ?: "Erro ao gerar questões.")
+            } finally {
+                _state.value = _state.value.copy(isGenerating = false)
             }
         }
     }

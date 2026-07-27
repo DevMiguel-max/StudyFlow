@@ -24,6 +24,7 @@ fun AppNavigation() {
     
     val showBottomBar = currentRoute?.startsWith("home") == true || 
                         currentRoute?.startsWith("subjects") == true ||
+                        currentRoute?.startsWith("more") == true ||
                         currentRoute?.startsWith("calendar") == true ||
                         currentRoute?.startsWith("study_methods") == true ||
                         currentRoute?.startsWith("profile") == true || currentRoute?.startsWith("statistics") == true
@@ -54,6 +55,7 @@ fun AppNavigation() {
             composable("recover_password") { RecoverPasswordScreen(navController) }
 
             composable("home") { HomeScreen(navController) }
+            composable("more") { com.example.presentation.screens.MoreScreen(navController) }
             composable("mentor") { com.example.presentation.screens.MentorScreen(onNavigateBack = { navController.popBackStack() }) }
         composable("ai_tutor") { com.example.presentation.screens.AITutorScreen(navController) }
             composable("subjects") { SubjectsScreen(navController) }

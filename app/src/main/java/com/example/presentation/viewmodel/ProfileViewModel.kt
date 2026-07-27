@@ -55,8 +55,9 @@ class ProfileViewModel(
             if (achs.isEmpty()) {
                 val initialAchievements = listOf(
                     Achievement("first_pomodoro", "Foco Inicial", "Complete o primeiro Pomodoro.", "🍅", "Bronze", "Pomodoro", 0, 1),
-                    Achievement("streak_7", "Chama Acesa", "Estude por 7 dias seguidos.", "🔥", "Prata", "Geral", 0, 7),
-                    Achievement("streak_30", "Mestre do Hábito", "Estude por 30 dias seguidos.", "🔥🔥", "Ouro", "Geral", 0, 30),
+                    Achievement("streak_3", "Iniciante Focado", "Complete 3 sessões consecutivas.", "🥉", "Bronze", "Geral", 0, 3),
+                    Achievement("streak_7", "Chama Acesa", "Complete 7 sessões consecutivas.", "🔥", "Prata", "Geral", 0, 7),
+                    Achievement("streak_30", "Mestre do Hábito", "Complete 30 sessões consecutivas.", "🏆", "Ouro", "Geral", 0, 30),
                     Achievement("first_essay", "Escritor Iniciante", "Escreva a primeira redação.", "✍️", "Bronze", "Redação", 0, 1),
                     Achievement("first_sim", "Preparado", "Faça o primeiro simulado.", "📝", "Prata", "Simulado", 0, 1),
                     Achievement("tasks_100", "Produtivo", "Conclua 100 tarefas.", "✅", "Ouro", "Tarefas", 0, 100),

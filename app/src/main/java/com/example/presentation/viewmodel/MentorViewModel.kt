@@ -47,10 +47,14 @@ class MentorViewModel(
         }
     }
 
+    fun clearError() {
+        _uiState.update { it.copy(error = null) }
+    }
+
     fun runAnalysis() {
         viewModelScope.launch {
             val currentProfile = _uiState.value.profile
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoading = true, error = null) }
             
             val subjects = studyFlowRepository.getSubjects().firstOrNull() ?: emptyList()
             val tasks = studyFlowRepository.getTasks().firstOrNull() ?: emptyList()
@@ -58,40 +62,46 @@ class MentorViewModel(
             val simulations = studyFlowRepository.getAllSimulations().firstOrNull() ?: emptyList()
             val goals = emptyList<StudyGoal>() // Just for now
             
-            val result = mentorService.analyzeProgress(
-                profile = currentProfile,
-                subjects = subjects,
-                tasks = tasks,
-                sessions = sessions,
-                goals = goals,
-                simulations = simulations
-            )
-            
-            // Save recommendations
-            result.recommendations.forEach { dto ->
-                mentorRepository.insertMentorRecommendation(
-                    MentorRecommendation(text = dto.text, reason = dto.reason, type = dto.type)
+            try {
+                val result = mentorService.analyzeProgress(
+                    profile = currentProfile,
+                    subjects = subjects,
+                    tasks = tasks,
+                    sessions = sessions,
+                    goals = goals,
+                    simulations = simulations
                 )
-            }
-            
-            // Save missions
-            result.missions.forEach { dto ->
-                mentorRepository.insertSmartMission(
-                    SmartMission(
-                        title = dto.title, 
-                        description = dto.description, 
-                        type = dto.type, 
-                        targetAmount = dto.targetAmount, 
-                        xpReward = dto.xpReward
+                
+                // Save recommendations
+                result.recommendations.forEach { dto ->
+                    mentorRepository.insertMentorRecommendation(
+                        MentorRecommendation(text = dto.text, reason = dto.reason, type = dto.type)
                     )
+                }
+                
+                // Save missions
+                result.missions.forEach { dto ->
+                    mentorRepository.insertSmartMission(
+                        SmartMission(
+                            title = dto.title, 
+                            description = dto.description, 
+                            type = dto.type, 
+                            targetAmount = dto.targetAmount, 
+                            xpReward = dto.xpReward
+                        )
+                    )
+                }
+                
+                mentorRepository.insertMentorHistory(
+                    MentorHistory(eventType = "AnalysisRun", details = result.overallProgressAssessment)
                 )
+                
+                _uiState.update { it.copy(lastAssessment = result.overallProgressAssessment) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message ?: "Erro ao gerar análise.") }
+            } finally {
+                _uiState.update { it.copy(isLoading = false) }
             }
-            
-            mentorRepository.insertMentorHistory(
-                MentorHistory(eventType = "AnalysisRun", details = result.overallProgressAssessment)
-            )
-            
-            _uiState.update { it.copy(isLoading = false, lastAssessment = result.overallProgressAssessment) }
         }
     }
 
@@ -113,5 +123,6 @@ data class MentorUiState(
     val recommendations: List<MentorRecommendation> = emptyList(),
     val activeMissions: List<SmartMission> = emptyList(),
     val isLoading: Boolean = true,
-    val lastAssessment: String? = null
+    val lastAssessment: String? = null,
+    val error: String? = null
 )

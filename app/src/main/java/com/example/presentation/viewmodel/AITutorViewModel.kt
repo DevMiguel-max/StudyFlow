@@ -18,7 +18,7 @@ data class AITutorState(
     val error: String? = null,
     val temperature: Float = 0.7f,
     val maxTokens: Int = 2048,
-    val selectedModel: String = "gemini-1.5-pro-latest"
+    val selectedModel: String = "meta/llama-3.1-405b-instruct"
 )
 
 class AITutorViewModel(

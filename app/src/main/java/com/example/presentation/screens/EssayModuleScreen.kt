@@ -57,6 +57,28 @@ fun EssayModuleScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
+            if (state.error != null) {
+                item {
+                    Surface(color = MaterialTheme.colorScheme.errorContainer, modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(state.error!!, color = MaterialTheme.colorScheme.onErrorContainer)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(onClick = { viewModel.clearError() }) {
+                                Text("OK")
+                            }
+                        }
+                    }
+                }
+            }
+            if (state.isLoading) {
+                item {
+                    Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.Center) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text("Avaliando redação...", modifier = Modifier.align(androidx.compose.ui.Alignment.CenterVertically))
+                    }
+                }
+            }
             item {
                 Text("Seu Histórico", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))

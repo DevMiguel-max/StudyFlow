@@ -72,7 +72,26 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         OutlinedTextField(value = editGoal, onValueChange = { editGoal = it }, label = { Text("Objetivo Principal") })
                         Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedTextField(value = editIcon, onValueChange = { editIcon = it }, label = { Text("Ícone (Emoji)") })
+                        val defaultIcons = listOf("👨‍🎓", "👩‍🎓", "📚", "🚀", "💡")
+                        val unlockedIcons = state.achievements.filter { it.isUnlocked }.map { it.icon }
+                        val allAvailableIcons = (defaultIcons + unlockedIcons).distinct()
+                        
+                        Text("Escolha seu Avatar", style = MaterialTheme.typography.labelMedium)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            items(allAvailableIcons) { icon ->
+                                Box(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .clip(CircleShape)
+                                        .background(if (editIcon == icon) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)
+                                        .clickable { editIcon = icon },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(icon, style = MaterialTheme.typography.titleLarge)
+                                }
+                            }
+                        }
                     }
                 },
                 confirmButton = {

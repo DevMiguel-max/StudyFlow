@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.stateIn
 
 data class PreparationState(
     val currentGoal: StudyGoal? = null,
+    val allGoals: List<StudyGoal> = emptyList(),
     val upcomingExamDays: Int? = null,
     val totalHoursStudied: Int = 0,
     val essaysCompleted: Int = 0,
@@ -36,9 +37,10 @@ class PreparationViewModel(private val repository: StudyFlowRepository) : ViewMo
         }
         
         val totalMinutes = sessions.filter { it.status == "completed" }.sumOf { it.durationMinutes }
-
+        
         PreparationState(
             currentGoal = nextGoal,
+            allGoals = goals,
             upcomingExamDays = daysToExam,
             totalHoursStudied = totalMinutes / 60,
             essaysCompleted = essays.count { it.status == "completed" || it.status == "graded" },

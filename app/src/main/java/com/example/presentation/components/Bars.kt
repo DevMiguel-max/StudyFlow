@@ -109,8 +109,8 @@ fun AppBottomBar(navController: NavController) {
     val items = listOf(
         BottomNavItem("home", Icons.Default.Home, "Início"),
         BottomNavItem("subjects", Icons.Default.Book, "Matérias"),
+        BottomNavItem("more", Icons.Default.Apps, "Mais"),
         BottomNavItem("calendar", Icons.Default.CalendarMonth, "Agenda"),
-        BottomNavItem("statistics", Icons.Default.BarChart, "Estatísticas"),
         BottomNavItem("profile", Icons.Default.Person, "Perfil")
     )
     

@@ -97,7 +97,7 @@ dependencies {
   implementation(libs.androidx.room.runtime)
   implementation(libs.coil.compose)
   implementation(libs.converter.moshi)
-  implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+  // implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
   // Uncomment to use Firestore:
   implementation(libs.firebase.firestore)
 

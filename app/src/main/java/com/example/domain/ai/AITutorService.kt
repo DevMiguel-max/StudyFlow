@@ -1,27 +1,9 @@
 package com.example.domain.ai
 
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.content
-import com.google.ai.client.generativeai.type.generationConfig
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import com.studyflow.app.BuildConfig
 
 class AITutorService {
     
-    private fun getModel(modelName: String, temperature: Float, maxTokens: Int): GenerativeModel {
-        val apiKey = BuildConfig.GEMINI_API_KEY
-        return GenerativeModel(
-            modelName = modelName,
-            apiKey = apiKey,
-            generationConfig = generationConfig {
-                this.temperature = temperature
-                this.maxOutputTokens = maxTokens
-            },
-            systemInstruction = content { text(PromptManager.getTutorSystemPrompt()) }
-        )
-    }
-
     suspend fun sendMessage(
         modelName: String,
         temperature: Float,
@@ -29,12 +11,35 @@ class AITutorService {
         history: List<Pair<String, Boolean>>, 
         message: String
     ): String {
-        val model = getModel(modelName, temperature, maxTokens)
-        val chatHistory = history.map { (text, isUser) ->
-            content(if (isUser) "user" else "model") { text(text) }
+        val apiKey = BuildConfig.NVIDIA_API_KEY.takeIf { it.isNotBlank() } ?: BuildConfig.GEMINI_API_KEY
+        
+        val messages = mutableListOf<NvidiaMessage>()
+        
+        // System prompt
+        messages.add(NvidiaMessage(role = "system", content = PromptManager.getTutorSystemPrompt()))
+        
+        // Chat history
+        history.forEach { (text, isUser) ->
+            val role = if (isUser) "user" else "assistant"
+            messages.add(NvidiaMessage(role = role, content = text))
         }
-        val chat = model.startChat(chatHistory)
-        val response = chat.sendMessage(message)
-        return response.text ?: ""
+        
+        // New message
+        messages.add(NvidiaMessage(role = "user", content = message))
+        
+        val request = NvidiaChatRequest(
+            model = modelName,
+            messages = messages,
+            temperature = temperature,
+            max_tokens = maxTokens
+        )
+        
+        return try {
+            val response = NvidiaApiClient.api.generateCompletion("Bearer $apiKey", request)
+            response.choices.firstOrNull()?.message?.content ?: ""
+        } catch (e: Exception) {
+            e.printStackTrace()
+            "Desculpe, ocorreu um erro ao se comunicar com o tutor AI."
+        }
     }
 }

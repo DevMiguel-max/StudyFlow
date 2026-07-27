@@ -71,7 +71,9 @@ class DocumentAnalyzerViewModel(
 
             } catch (e: Exception) {
                 e.printStackTrace()
-                _state.value = _state.value.copy(isProcessing = false, error = "Falha no processamento: ${e.message}")
+                _state.value = _state.value.copy(error = e.message ?: "Falha no processamento do documento.")
+            } finally {
+                _state.value = _state.value.copy(isProcessing = false)
             }
         }
     }
@@ -103,7 +105,9 @@ class DocumentAnalyzerViewModel(
                 
             } catch (e: Exception) {
                 e.printStackTrace()
-                _state.value = _state.value.copy(isProcessing = false, error = "Falha ao gerar resumo.")
+                _state.value = _state.value.copy(error = e.message ?: "Falha ao gerar resumo.")
+            } finally {
+                _state.value = _state.value.copy(isProcessing = false)
             }
         }
     }

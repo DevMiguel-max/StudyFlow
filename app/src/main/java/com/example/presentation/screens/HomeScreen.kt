@@ -42,7 +42,7 @@ fun HomeScreen(
         item {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Oi, Miguel! 👋",
+                    text = "Oi, ${state.userProfile?.name ?: "Estudante"}! 👋",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground

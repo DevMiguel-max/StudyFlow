@@ -75,6 +75,7 @@ class GamificationManager(private val repository: StudyFlowRepository) {
             lastStudyDate = System.currentTimeMillis()
         ))
         
+        updateProgress("streak_3", streak, absoluteProgress = true)
         updateProgress("streak_7", streak, absoluteProgress = true)
         updateProgress("streak_30", streak, absoluteProgress = true)
     }
