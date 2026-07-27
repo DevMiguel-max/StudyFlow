@@ -178,6 +178,8 @@ val appModule = module {
     }
     
     single { get<StudyFlowDatabase>().studyFlowDao() }
+    single { get<StudyFlowDatabase>().aiCacheDao() }
+    single { com.example.domain.ai.AIMetadataManager(androidContext()) }
     
         single { FirebaseAuth.getInstance() }
     single { FirebaseFirestore.getInstance() }

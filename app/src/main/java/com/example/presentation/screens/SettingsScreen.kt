@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import androidx.navigation.NavController
 import com.example.domain.repository.SyncStatus
 import com.example.presentation.viewmodel.AuthViewModel
@@ -264,6 +265,7 @@ fun SettingsScreen(
 fun AISettingsCard() {
     val telemetryStats by com.example.domain.ai.AITelemetry.stats.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = rememberCoroutineScope()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -282,7 +284,7 @@ fun AISettingsCard() {
             Spacer(modifier = Modifier.height(16.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
-                    onClick = { com.example.domain.ai.AICacheManager.clear() },
+                    onClick = { scope.launch { com.example.domain.ai.AICacheManager.clear() } },
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("Limpar Cache")

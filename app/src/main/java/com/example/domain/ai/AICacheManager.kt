@@ -1,31 +1,46 @@
 package com.example.domain.ai
 
-import java.util.concurrent.ConcurrentHashMap
+import com.example.data.local.AICacheDao
+import com.example.data.local.AICacheEntity
+import kotlinx.coroutines.flow.first
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-data class CacheEntry(
-    val data: String,
-    val timestamp: Long = System.currentTimeMillis()
-)
+object AICacheManager : KoinComponent {
+    private const val CACHE_EXPIRATION_MS = 1000L * 60 * 60 * 24 // 24 hours
+    
+    private val dao: AICacheDao by inject()
+    private val metadataManager: AIMetadataManager by inject()
 
-object AICacheManager {
-    private const val CACHE_EXPIRATION_MS = 1000 * 60 * 60 * 24 // 24 hours
-    
-    private val memoryCache = ConcurrentHashMap<String, CacheEntry>()
-    
-    fun get(key: String): String? {
-        val entry = memoryCache[key] ?: return null
+    suspend fun get(key: String): String? {
+        val isEnabled = metadataManager.cacheEnabled.first()
+        if (!isEnabled) return null
+
+        val entry = dao.getCache(key) ?: return null
         if (System.currentTimeMillis() - entry.timestamp > CACHE_EXPIRATION_MS) {
-            memoryCache.remove(key)
+            dao.deleteCache(key)
             return null
         }
-        return entry.data
+        return entry.content
     }
     
-    fun put(key: String, data: String) {
-        memoryCache[key] = CacheEntry(data)
+    suspend fun put(key: String, data: String) {
+        val isEnabled = metadataManager.cacheEnabled.first()
+        if (!isEnabled) return
+
+        val type = when {
+            key.startsWith("material_") -> "material"
+            key.startsWith("flashcards_") -> "flashcards"
+            key.startsWith("questions_") -> "questions"
+            key.startsWith("doc_analysis_") -> "doc_analysis"
+            else -> "general"
+        }
+        dao.insertCache(AICacheEntity(key, data, System.currentTimeMillis(), type))
+        dao.deleteExpiredCache(System.currentTimeMillis() - CACHE_EXPIRATION_MS)
     }
     
-    fun clear() {
-        memoryCache.clear()
+    suspend fun clear() {
+        dao.clearAll()
+        metadataManager.setLastCleanupTime(System.currentTimeMillis())
     }
 }

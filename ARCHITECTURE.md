@@ -21,3 +21,8 @@
 *   **Persistência**: Room para uso offline nativo, Firebase para sync (quando ativo).
 
 O projeto é mantido sob os padrões de tipagem segura do Kotlin.
+
+## Modificações Recentes
+*   **Cache Inteligente com Room + DataStore**: Os conteúdos das respostas geradas e material de estudo denso (resumos, flashcards) foram movidos para uma nova tabela nativa no Room (`ai_cache`), melhorando enormemente o uso da RAM (que antes utilizava `ConcurrentHashMap`).
+*   **Controle e Metadados**: O `DataStore` (preferences) foi introduzido em `AIMetadataManager` para administrar preferências finas de estado e flags de ativação do cache, assim como carimbo de tempo da última limpeza e métricas.
+*   **Limpeza Inteligente de Cache (Time-To-Live)**: Uma política de expiração baseada em TTL temporal (`CACHE_EXPIRATION_MS`) e remoção assíncrona foi implementada.

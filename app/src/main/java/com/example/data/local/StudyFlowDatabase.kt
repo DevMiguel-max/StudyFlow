@@ -41,10 +41,12 @@ import androidx.room.RoomDatabase
         MentorRecommendation::class,
         SmartMission::class,
         MentorHistory::class
+        , AICacheEntity::class
     ],
-    version = 13,
+    version = 14,
     exportSchema = false
 )
 abstract class StudyFlowDatabase : RoomDatabase() {
     abstract fun studyFlowDao(): StudyFlowDao
+    abstract fun aiCacheDao(): AICacheDao
 }
