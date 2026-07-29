@@ -96,9 +96,13 @@ class MentorService {
             jsonText = jsonText.replace("```json", "").replace("```", "").trim()
             
             json.decodeFromString<MentorAnalysisResult>(jsonText)
+        } catch (e: java.net.UnknownHostException) {
+            throw Exception("Sem conexão com a internet. Verifique sua rede.", e)
+        } catch (e: retrofit2.HttpException) {
+            throw Exception("Erro da API (código ${e.code()}). Verifique a chave de API configurada.", e)
         } catch (e: Exception) {
             e.printStackTrace()
-            MentorAnalysisResult(emptyList(), emptyList(), emptyList(), "Não foi possível gerar a análise.")
+            throw e
         }
     }
 }

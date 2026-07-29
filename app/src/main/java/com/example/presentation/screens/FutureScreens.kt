@@ -28,11 +28,17 @@ fun PlaceholderScreen(
     prepViewModel: PreparationViewModel = koinViewModel(),
     simViewModel: SimulationViewModel = koinViewModel()
 ) {
-    if (examType == "ENEM" || examType == "Vestibulares") {
+    if (examType == "ENEM" || examType == "Vestibulares" || examType == "Concursos" || examType == "Faculdade") {
         val prepState by prepViewModel.state.collectAsState()
         val simState by simViewModel.state.collectAsState()
         
-        val typeFilter = if (examType == "ENEM") "ENEM" else "Vestibular"
+        val typeFilter = when (examType) {
+            "ENEM" -> "ENEM"
+            "Vestibulares" -> "Vestibular"
+            "Concursos" -> "Concurso"
+            "Faculdade" -> "Faculdade"
+            else -> examType
+        }
         
         val goals = prepState.allGoals.filter { it.type == typeFilter }
         val simulations = simState.simulations.filter { it.examType == typeFilter }

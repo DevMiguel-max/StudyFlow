@@ -37,9 +37,13 @@ class AITutorService {
         return try {
             val response = NvidiaApiClient.api.generateCompletion("Bearer $apiKey", request)
             response.choices.firstOrNull()?.message?.content ?: ""
+        } catch (e: java.net.UnknownHostException) {
+            "Sem conexão com a internet. Verifique sua rede."
+        } catch (e: retrofit2.HttpException) {
+            "Erro da API (código ${e.code()}). Verifique a chave de API configurada."
         } catch (e: Exception) {
             e.printStackTrace()
-            "Desculpe, ocorreu um erro ao se comunicar com o tutor AI."
+            "Erro ao se comunicar com o tutor AI: ${e.message ?: e::class.simpleName}"
         }
     }
 }

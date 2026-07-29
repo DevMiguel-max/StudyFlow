@@ -91,7 +91,7 @@ fun AITutorScreen(
             title = { Text("Configurações do Tutor") },
             text = {
                 Column {
-                    Text("Temperatura: \${temp}")
+                    Text("Temperatura: ${temp}")
                     Slider(
                         value = temp,
                         onValueChange = { temp = it },
@@ -202,7 +202,7 @@ fun ChatInterface(
                     maxLines = 5,
                     shape = RoundedCornerShape(24.dp),
                     supportingText = {
-                        Text("\${inputText.length} caracteres", modifier = Modifier.fillMaxWidth())
+                        Text("${inputText.length} caracteres", modifier = Modifier.fillMaxWidth())
                     }
                 )
                 IconButton(
