@@ -150,7 +150,7 @@ val MIGRATION_9_10 = object : Migration(9, 10) {
                 `revisedVersion` TEXT NOT NULL DEFAULT '',
                 `detailedAnalysisJson` TEXT NOT NULL DEFAULT '',
                 `competenciesDetailsJson` TEXT NOT NULL DEFAULT '',
-                `modelUsed` TEXT NOT NULL DEFAULT 'gemini-1.5-pro-latest',
+                `modelUsed` TEXT NOT NULL DEFAULT 'meta/llama3-70b-instruct',
                 `isDetailed` INTEGER NOT NULL DEFAULT 1
             )
         """)

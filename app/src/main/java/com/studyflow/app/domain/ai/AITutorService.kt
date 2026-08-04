@@ -11,7 +11,7 @@ class AITutorService {
         history: List<Pair<String, Boolean>>, 
         message: String
     ): String {
-        val apiKey = BuildConfig.NVIDIA_API_KEY.takeIf { it.isNotBlank() } ?: BuildConfig.GEMINI_API_KEY
+        val apiKey = BuildConfig.NVIDIA_API_KEY
         
         val messages = mutableListOf<NvidiaMessage>()
         

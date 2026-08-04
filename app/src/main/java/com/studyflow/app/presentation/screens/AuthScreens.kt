@@ -1,5 +1,9 @@
 package com.studyflow.app.presentation.screens
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -171,6 +175,8 @@ fun SignUpScreen(
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     val state by viewModel.state.collectAsState()
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(state.isSuccess) {
         if (state.isSuccess) {
@@ -234,6 +240,30 @@ fun SignUpScreen(
                 ) {
                     Text("Cadastrar")
                 }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                val webClientId = stringResource(R.string.default_web_client_id)
+                OutlinedButton(
+                    onClick = {
+                        coroutineScope.launch {
+                            val idToken = signInWithGoogle(context, webClientId)
+                            if (idToken != null) {
+                                viewModel.signInWithGoogle(idToken)
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AccountCircle,
+                        contentDescription = "Google Icon",
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text("Criar conta com Google", style = MaterialTheme.typography.titleMedium)
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
                 TextButton(onClick = { navController.popBackStack() }) {
                     Text("Voltar")

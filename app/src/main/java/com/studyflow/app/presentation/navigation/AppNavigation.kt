@@ -1,6 +1,8 @@
 package com.studyflow.app.presentation.navigation
 
 import androidx.compose.animation.*
+import com.studyflow.app.presentation.screens.*
+
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -14,7 +16,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.studyflow.app.presentation.components.AppBottomBar
-import com.studyflow.app.presentation.screens.*
 
 @Composable
 fun AppNavigation() {
@@ -55,9 +56,9 @@ fun AppNavigation() {
             composable("recover_password") { RecoverPasswordScreen(navController) }
 
             composable("home") { HomeScreen(navController) }
-            composable("more") { com.studyflow.app.presentation.screens.MoreScreen(navController) }
-            composable("mentor") { com.studyflow.app.presentation.screens.MentorScreen(onNavigateBack = { navController.popBackStack() }) }
-        composable("ai_tutor") { com.studyflow.app.presentation.screens.AITutorScreen(navController) }
+            composable("more") { MoreScreen(navController) }
+            composable("mentor") { MentorScreen(onNavigateBack = { navController.popBackStack() }) }
+        composable("ai_tutor") { AITutorScreen(navController) }
             composable("subjects") { SubjectsScreen(navController) }
             
             composable(
@@ -172,8 +173,8 @@ fun AppNavigation() {
             composable("simulations") { SimulationsScreen(navController) }
             composable("concursos") { PlaceholderScreen(navController, "Concursos") }
             composable("faculdade") { PlaceholderScreen(navController, "Faculdade") }
-            composable("editais") { com.studyflow.app.presentation.screens.DocumentAnalyzerScreen(navController) }
-            composable("material_generator") { com.studyflow.app.presentation.screens.MaterialGeneratorScreen(navController) }
+            composable("editais") { DocumentAnalyzerScreen(navController) }
+            composable("material_generator") { MaterialGeneratorScreen(navController) }
         }
     }
 }
