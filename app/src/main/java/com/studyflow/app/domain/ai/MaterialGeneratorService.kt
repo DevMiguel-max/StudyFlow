@@ -14,7 +14,7 @@ class MaterialGeneratorService {
     suspend fun generateMaterial(sourceText: String, type: String, options: Map<String, String> = emptyMap()): String {
         val cacheKey = "material_${type}_${sourceText.hashCode()}"
         return AIHelper.withRetryAndTelemetry("generateMaterial", cacheKey = cacheKey) {
-            val apiKey = BuildConfig.NVIDIA_API_KEY.takeIf { it.isNotBlank() } ?: BuildConfig.GEMINI_API_KEY
+            val apiKey = BuildConfig.NVIDIA_API_KEY
             
             val systemPrompt = when (type) {
                 "SUMMARY_QUICK" -> "Crie um resumo rápido (máximo 150 palavras) do texto a seguir, focando apenas nos pontos cruciais."
@@ -48,7 +48,7 @@ class MaterialGeneratorService {
     suspend fun generateFlashcards(sourceText: String, count: Int, difficulty: String, subjectId: Int, subjectName: String): List<Flashcard> {
         val cacheKey = "flashcards_${difficulty}_${sourceText.hashCode()}"
         return AIHelper.withRetryAndTelemetry("generateFlashcards") {
-            val apiKey = BuildConfig.NVIDIA_API_KEY.takeIf { it.isNotBlank() } ?: BuildConfig.GEMINI_API_KEY
+            val apiKey = BuildConfig.NVIDIA_API_KEY
             
             val systemPrompt = """
                 Gere $count flashcards baseados no texto fornecido, com nível de dificuldade '$difficulty'.
@@ -98,7 +98,7 @@ class MaterialGeneratorService {
 
     suspend fun generateQuestions(sourceText: String, count: Int, difficulty: String, subjectId: Int, subjectName: String): List<GeneratedQuestion> {
         return AIHelper.withRetryAndTelemetry("generateQuestions") {
-            val apiKey = BuildConfig.NVIDIA_API_KEY.takeIf { it.isNotBlank() } ?: BuildConfig.GEMINI_API_KEY
+            val apiKey = BuildConfig.NVIDIA_API_KEY
             
             val systemPrompt = """
                 Gere $count questões de múltipla escolha baseadas no texto, nível de dificuldade '$difficulty'.

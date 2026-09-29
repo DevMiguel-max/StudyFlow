@@ -7,7 +7,7 @@ class DocumentAnalyzerService {
     suspend fun analyzeDocument(text: String, analysisType: String): String {
         val cacheKey = "doc_analysis_${analysisType}_${text.hashCode()}"
         return AIHelper.withRetryAndTelemetry("analyzeDocument_$analysisType", cacheKey = cacheKey) {
-            val apiKey = BuildConfig.NVIDIA_API_KEY.takeIf { it.isNotBlank() } ?: BuildConfig.GEMINI_API_KEY
+            val apiKey = BuildConfig.NVIDIA_API_KEY
             val systemPrompt = when (analysisType) {
                 "IDENTIFY_TYPE" -> "Você é um assistente especializado em análise de documentos. Identifique o tipo do documento (Edital, Livro, Apostila, Resumo, Lista de exercícios, etc.). Responda apenas com o tipo."
                 "SUMMARY_SHORT" -> "Faça um resumo curto (máximo 3 parágrafos) do seguinte documento."
@@ -40,7 +40,7 @@ class DocumentAnalyzerService {
 
     suspend fun chatWithDocument(documentText: String, question: String): String {
         return AIHelper.withRetryAndTelemetry("chatWithDocument") {
-            val apiKey = BuildConfig.NVIDIA_API_KEY.takeIf { it.isNotBlank() } ?: BuildConfig.GEMINI_API_KEY
+            val apiKey = BuildConfig.NVIDIA_API_KEY
             val systemPrompt = "Você é um assistente prestativo. Use o documento fornecido a seguir como base para responder à pergunta do usuário.\n\nDocumento:\n${documentText.take(15000)}"
             
             val request = NvidiaChatRequest(

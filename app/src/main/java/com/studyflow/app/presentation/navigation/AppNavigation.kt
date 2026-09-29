@@ -145,8 +145,8 @@ fun AppNavigation() {
             // Phase 6
             composable("preparation") { PreparationScreen(navController) }
             composable("exam_goal_form") { ExamGoalFormScreen(navController) }
-            composable("enem") { PlaceholderScreen(navController, "ENEM") }
-            composable("vestibulares") { PlaceholderScreen(navController, "Vestibulares") }
+            composable("enem") { GoalTypeScreen(navController, "ENEM") }
+            composable("vestibulares") { GoalTypeScreen(navController, "Vestibular") }
             composable("essay_module") { EssayModuleScreen(navController) }
             composable("essay_themes") { EssayThemesScreen(navController) }
             
@@ -171,8 +171,8 @@ fun AppNavigation() {
             }
             
             composable("simulations") { SimulationsScreen(navController) }
-            composable("concursos") { PlaceholderScreen(navController, "Concursos") }
-            composable("faculdade") { PlaceholderScreen(navController, "Faculdade") }
+            composable("concursos") { GoalTypeScreen(navController, "Concurso") }
+            composable("faculdade") { GoalTypeScreen(navController, "Faculdade") }
             composable("editais") { DocumentAnalyzerScreen(navController) }
             composable("material_generator") { MaterialGeneratorScreen(navController) }
         }

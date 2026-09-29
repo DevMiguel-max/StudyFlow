@@ -16,7 +16,7 @@ class AIEssayCorrectorService {
         motivationalTexts: String
     ): AICorrectionResult {
         // Obter chave da API do NVIDIA NIM (usando a mesma variável por conveniência, ou NVIDIA_API_KEY se configurada)
-        val apiKey = BuildConfig.NVIDIA_API_KEY.takeIf { it.isNotBlank() } ?: BuildConfig.GEMINI_API_KEY
+        val apiKey = BuildConfig.NVIDIA_API_KEY
         
         val prompt = """
             Tema: $themeTitle

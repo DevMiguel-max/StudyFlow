@@ -41,7 +41,7 @@ class MentorService {
         simulations: List<Simulation>
     ): MentorAnalysisResult {
         
-        val apiKey = BuildConfig.NVIDIA_API_KEY.takeIf { it.isNotBlank() } ?: BuildConfig.GEMINI_API_KEY
+        val apiKey = BuildConfig.NVIDIA_API_KEY
         
         val prompt = """
             Você é um Mentor Inteligente de estudos.

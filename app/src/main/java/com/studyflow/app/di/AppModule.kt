@@ -126,6 +126,31 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
 }
 
 
+
+val MIGRATION_8_9 = object : Migration(8, 9) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // MANUAL REVIEW NEEDED: cannot infer schema delta for version 8->9
+    }
+}
+
+val MIGRATION_10_11 = object : Migration(10, 11) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // MANUAL REVIEW NEEDED: cannot infer schema delta for version 10->11
+    }
+}
+
+val MIGRATION_11_12 = object : Migration(11, 12) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // MANUAL REVIEW NEEDED: cannot infer schema delta for version 11->12
+    }
+}
+
+val MIGRATION_13_14 = object : Migration(13, 14) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // MANUAL REVIEW NEEDED: cannot infer schema delta for version 13->14
+    }
+}
+
 val MIGRATION_9_10 = object : Migration(9, 10) {
     override fun migrate(database: SupportSQLiteDatabase) {
         // Recreate essay_corrections table with new fields
@@ -171,9 +196,17 @@ val appModule = module {
             StudyFlowDatabase::class.java,
             "studyflow.db"
         )
-        .addMigrations(MIGRATION_5_6, MIGRATION_6_7)
-        .addMigrations(com.studyflow.app.data.local.MIGRATION_7_8, MIGRATION_9_10, com.studyflow.app.di.MIGRATION_12_13)
-            .fallbackToDestructiveMigration()
+        .addMigrations(
+            MIGRATION_5_6,
+            MIGRATION_6_7,
+            com.studyflow.app.data.local.MIGRATION_7_8,
+            MIGRATION_8_9,
+            MIGRATION_9_10,
+            MIGRATION_10_11,
+            MIGRATION_11_12,
+            com.studyflow.app.di.MIGRATION_12_13,
+            MIGRATION_13_14
+        )
         .build()
     }
     
