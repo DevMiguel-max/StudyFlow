@@ -30,6 +30,7 @@ import org.koin.androidx.compose.koinViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,17 +38,25 @@ fun LoginScreen(
     navController: NavController,
     viewModel: AuthViewModel = koinViewModel()
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
     val state by viewModel.state.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val webClientId = stringResource(R.string.default_web_client_id)
 
     LaunchedEffect(currentUser) {
         if (currentUser != null) {
             navController.navigate("home") {
                 popUpTo("login") { inclusive = true }
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (currentUser == null) {
+            val token = attemptSilentSignIn(context, webClientId)
+            if (token != null) {
+                viewModel.signInWithGoogle(token)
             }
         }
     }
@@ -61,6 +70,13 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Icon(
+                imageVector = Icons.Default.AccountCircle,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(72.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "StudyFlow",
                 style = MaterialTheme.typography.displayMedium,
@@ -68,57 +84,46 @@ fun LoginScreen(
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
             )
             Text(
-                text = "Faça login para continuar",
+                text = "Sua jornada de estudos inteligente e sincronizada",
                 style = MaterialTheme.typography.bodyLarge,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 8.dp, bottom = 48.dp)
+                modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
             )
             
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("E-mail") },
-                leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email") },
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Senha") },
-                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Senha") },
-                visualTransformation = PasswordVisualTransformation(),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(20.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Conecte sua conta Google para salvar seu progresso na nuvem, acessar seu histórico de redações e sincronizar seus dados.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
             
             if (state.error != null) {
                 Text(
                     text = state.error!!,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(top = 12.dp)
                 )
             }
             
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             
             if (state.isLoading) {
                 CircularProgressIndicator()
             } else {
                 Button(
-                    onClick = { viewModel.signInWithEmail(email, password) },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Text("Entrar", style = MaterialTheme.typography.titleMedium)
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                val webClientId = stringResource(R.string.default_web_client_id)
-                OutlinedButton(
                     onClick = {
                         coroutineScope.launch {
                             val idToken = signInWithGoogle(context, webClientId)
@@ -127,7 +132,10 @@ fun LoginScreen(
                             }
                         }
                     },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .testTag("google_sign_in_button"),
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Icon(
@@ -138,27 +146,20 @@ fun LoginScreen(
                     Text("Entrar com o Google", style = MaterialTheme.typography.titleMedium)
                 }
                 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                OutlinedButton(
+                    onClick = { 
+                        navController.navigate("home") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    TextButton(onClick = { navController.navigate("signup") }) {
-                        Text("Criar conta")
-                    }
-                    TextButton(onClick = { navController.navigate("recover_password") }) {
-                        Text("Esqueci a senha")
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                TextButton(onClick = { 
-                    navController.navigate("home") {
-                        popUpTo("login") { inclusive = true }
-                    }
-                }) {
-                    Text("Continuar Offline", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Continuar Offline", style = MaterialTheme.typography.titleMedium)
                 }
             }
         }
@@ -177,6 +178,7 @@ fun SignUpScreen(
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val webClientId = stringResource(R.string.default_web_client_id)
 
     LaunchedEffect(state.isSuccess) {
         if (state.isSuccess) {
@@ -243,8 +245,7 @@ fun SignUpScreen(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                val webClientId = stringResource(R.string.default_web_client_id)
-                OutlinedButton(
+                Button(
                     onClick = {
                         coroutineScope.launch {
                             val idToken = signInWithGoogle(context, webClientId)
@@ -253,7 +254,10 @@ fun SignUpScreen(
                             }
                         }
                     },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .testTag("google_sign_up_button"),
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Icon(
@@ -261,7 +265,7 @@ fun SignUpScreen(
                         contentDescription = "Google Icon",
                         modifier = Modifier.padding(end = 8.dp)
                     )
-                    Text("Criar conta com Google", style = MaterialTheme.typography.titleMedium)
+                    Text("Cadastrar com o Google", style = MaterialTheme.typography.titleMedium)
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))

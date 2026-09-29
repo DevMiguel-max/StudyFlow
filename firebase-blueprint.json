@@ -1,0 +1,37 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile, settings, and gamification state",
+      "type": "object",
+      "properties": {
+        "id": { "type": "number", "description": "Local ID identifier" },
+        "updatedAt": { "type": "number", "description": "Last update timestamp in milliseconds" },
+        "xp": { "type": "number", "description": "Experience points" },
+        "level": { "type": "number", "description": "User level" },
+        "streakDays": { "type": "number", "description": "Current streak in days" },
+        "maxStreakDays": { "type": "number", "description": "Max streak in days" },
+        "lastStudyDate": { "type": "number", "description": "Last study date in milliseconds" },
+        "avatarIcon": { "type": "string", "description": "Avatar emoji or icon" },
+        "name": { "type": "string", "description": "User display name" },
+        "email": { "type": "string", "description": "User email address" },
+        "mainGoal": { "type": "string", "description": "Main study goal" },
+        "avatarColor": { "type": "string", "description": "Avatar color hex" },
+        "gamificationEnabled": { "type": "boolean", "description": "Whether gamification is active" },
+        "soundsEnabled": { "type": "boolean", "description": "Whether sounds are enabled" },
+        "notificationsEnabled": { "type": "boolean", "description": "Whether notifications are enabled" }
+      },
+      "required": ["name", "email"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile document storing personal progress and sync state"
+    },
+    "/users/{userId}/{allChildren=**}": {
+      "schema": "UserProfile",
+      "description": "Subcollections of user data scoped to the authenticated user"
+    }
+  }
+}

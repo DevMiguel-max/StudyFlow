@@ -10,6 +10,8 @@ import com.studyflow.app.domain.repository.StudyFlowRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
+import com.studyflow.app.domain.ai.AIConfig
+
 data class AITutorState(
     val conversations: List<AIConversation> = emptyList(),
     val currentConversationId: Long? = null,
@@ -18,7 +20,7 @@ data class AITutorState(
     val error: String? = null,
     val temperature: Float = 0.7f,
     val maxTokens: Int = 2048,
-    val selectedModel: String = "gemini-2.5-flash"
+    val selectedModel: String = AIConfig.MODEL
 )
 
 class AITutorViewModel(

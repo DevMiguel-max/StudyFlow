@@ -39,6 +39,9 @@ class AIEssayCorrectorService(
         if (responseText.isBlank()) {
             throw Exception("Resposta vazia da IA")
         }
+        if (responseText == "Modelo indisponível" || responseText.contains("Modelo indisponível", ignoreCase = true)) {
+            throw Exception("Modelo indisponível")
+        }
         
         // Limpar o JSON (remover blocos de markdown e chaves residuais)
         var cleanJson = responseText.replace("```json", "").replace("```", "").trim()

@@ -15,6 +15,7 @@ class StudyFlowApplication : Application() {
         } catch (e: Exception) {
             // Might be already initialized
         }
+        AppCheckInitializer.init()
 
         startKoin {
             androidContext(this@StudyFlowApplication)

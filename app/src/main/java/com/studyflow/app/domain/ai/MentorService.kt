@@ -85,6 +85,9 @@ class MentorService(
                 prompt = prompt,
                 systemInstruction = "Você é um AI Mentor para estudos."
             )
+            if (responseText == "Modelo indisponível" || responseText.contains("Modelo indisponível", ignoreCase = true)) {
+                throw Exception("Modelo indisponível")
+            }
             var cleanJson = responseText.replace("```json", "").replace("```", "").trim()
             val startIndex = cleanJson.indexOf("{")
             val endIndex = cleanJson.lastIndexOf("}")

@@ -152,7 +152,7 @@ val MIGRATION_9_10 = object : Migration(9, 10) {
                 `revisedVersion` TEXT NOT NULL DEFAULT '',
                 `detailedAnalysisJson` TEXT NOT NULL DEFAULT '',
                 `competenciesDetailsJson` TEXT NOT NULL DEFAULT '',
-                `modelUsed` TEXT NOT NULL DEFAULT 'gemini-2.5-flash',
+                `modelUsed` TEXT NOT NULL DEFAULT 'meta/llama3-70b-instruct',
                 `isDetailed` INTEGER NOT NULL DEFAULT 1
             )
         """)
@@ -198,10 +198,10 @@ val appModule = module {
     single { get<StudyFlowDatabase>().aiCacheDao() }
     single { com.studyflow.app.domain.ai.AIMetadataManager(androidContext()) }
     
-        single { FirebaseAuth.getInstance() }
-    single { FirebaseFirestore.getInstance() }
+    single { FirebaseAuth.getInstance() }
+    single { FirebaseFirestore.getInstance(androidContext().getString(com.studyflow.app.R.string.firestore_database_id)) }
     
-    single<AuthRepository> { AuthRepositoryImpl(get()) }
+    single<AuthRepository> { AuthRepositoryImpl(get(), androidContext()) }
     single<SyncRepository> { SyncRepositoryImpl(get(), get(), get<com.studyflow.app.data.local.StudyFlowDatabase>().studyFlowDao()) }
     single<com.studyflow.app.domain.repository.MentorRepository> { com.studyflow.app.data.repository.MentorRepositoryImpl(get()) }
     single<StudyFlowRepository> { StudyFlowRepositoryImpl(get()) }
