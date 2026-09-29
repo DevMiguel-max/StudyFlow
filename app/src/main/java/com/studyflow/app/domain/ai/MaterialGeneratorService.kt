@@ -1,6 +1,5 @@
 package com.studyflow.app.domain.ai
 
-import com.studyflow.app.BuildConfig
 import com.studyflow.app.data.local.GeneratedQuestion
 import com.studyflow.app.data.local.Flashcard
 import kotlinx.serialization.json.Json
@@ -9,13 +8,13 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-class MaterialGeneratorService {
+class MaterialGeneratorService(
+    private val geminiClient: GeminiClient = GeminiClient()
+) {
     
     suspend fun generateMaterial(sourceText: String, type: String, options: Map<String, String> = emptyMap()): String {
         val cacheKey = "material_${type}_${sourceText.hashCode()}"
         return AIHelper.withRetryAndTelemetry("generateMaterial", cacheKey = cacheKey) {
-            val apiKey = BuildConfig.NVIDIA_API_KEY
-            
             val systemPrompt = when (type) {
                 "SUMMARY_QUICK" -> "Crie um resumo rápido (máximo 150 palavras) do texto a seguir, focando apenas nos pontos cruciais."
                 "SUMMARY_COMPLETE" -> "Crie um resumo completo do texto a seguir, cobrindo todos os detalhes, conceitos e definições importantes. Mantenha a estrutura em parágrafos e tópicos quando aplicável."
@@ -32,24 +31,17 @@ class MaterialGeneratorService {
             val language = options["language"] ?: "português"
             val fullPrompt = "$systemPrompt\n\nResponda em $language.\n\nTexto original:\n${sourceText.take(15000)}"
 
-            val request = NvidiaChatRequest(
-                model = "meta/llama-3.1-405b-instruct",
-                messages = listOf(
-                    NvidiaMessage(role = "system", content = systemPrompt),
-                    NvidiaMessage(role = "user", content = fullPrompt)
-                )
+            val response = geminiClient.generateText(
+                prompt = fullPrompt,
+                systemInstruction = systemPrompt
             )
-
-            val response = NvidiaApiClient.api.generateCompletion("Bearer $apiKey", request)
-            response.choices.firstOrNull()?.message?.content ?: "Não foi possível gerar o material."
+            response.ifBlank { "Não foi possível gerar o material." }
         }
     }
 
     suspend fun generateFlashcards(sourceText: String, count: Int, difficulty: String, subjectId: Int, subjectName: String): List<Flashcard> {
         val cacheKey = "flashcards_${difficulty}_${sourceText.hashCode()}"
         return AIHelper.withRetryAndTelemetry("generateFlashcards") {
-            val apiKey = BuildConfig.NVIDIA_API_KEY
-            
             val systemPrompt = """
                 Gere $count flashcards baseados no texto fornecido, com nível de dificuldade '$difficulty'.
                 Retorne APENAS um array JSON válido. Formato:
@@ -63,18 +55,13 @@ class MaterialGeneratorService {
                 ]
                 Não adicione crases Markdown (` ```json `), responda apenas com o JSON cru.
             """.trimIndent()
-            
-            val request = NvidiaChatRequest(
-                model = "meta/llama-3.1-405b-instruct",
-                messages = listOf(
-                    NvidiaMessage(role = "system", content = systemPrompt),
-                    NvidiaMessage(role = "user", content = "Texto:\n${sourceText.take(15000)}")
-                ),
+
+            val responseText = geminiClient.generateText(
+                prompt = "Texto:\n${sourceText.take(15000)}",
+                systemInstruction = systemPrompt,
                 temperature = 0.3f
             )
-            
-            val response = NvidiaApiClient.api.generateCompletion("Bearer $apiKey", request)
-            val jsonText = response.choices.firstOrNull()?.message?.content ?: "[]"
+            val jsonText = responseText.ifBlank { "[]" }
             
             val cleanJson = jsonText.substringAfter("[").substringBeforeLast("]")
             val finalJsonStr = "[$cleanJson]"
@@ -98,8 +85,6 @@ class MaterialGeneratorService {
 
     suspend fun generateQuestions(sourceText: String, count: Int, difficulty: String, subjectId: Int, subjectName: String): List<GeneratedQuestion> {
         return AIHelper.withRetryAndTelemetry("generateQuestions") {
-            val apiKey = BuildConfig.NVIDIA_API_KEY
-            
             val systemPrompt = """
                 Gere $count questões de múltipla escolha baseadas no texto, nível de dificuldade '$difficulty'.
                 Cada questão deve ter 5 alternativas (de A a E).
@@ -115,18 +100,13 @@ class MaterialGeneratorService {
                 ]
                 Não adicione crases Markdown (` ```json `), responda apenas com o JSON cru.
             """.trimIndent()
-            
-            val request = NvidiaChatRequest(
-                model = "meta/llama-3.1-405b-instruct",
-                messages = listOf(
-                    NvidiaMessage(role = "system", content = systemPrompt),
-                    NvidiaMessage(role = "user", content = "Texto:\n${sourceText.take(15000)}")
-                ),
+
+            val responseText = geminiClient.generateText(
+                prompt = "Texto:\n${sourceText.take(15000)}",
+                systemInstruction = systemPrompt,
                 temperature = 0.3f
             )
-            
-            val response = NvidiaApiClient.api.generateCompletion("Bearer $apiKey", request)
-            val jsonText = response.choices.firstOrNull()?.message?.content ?: "[]"
+            val jsonText = responseText.ifBlank { "[]" }
             
             val cleanJson = jsonText.substringAfter("[").substringBeforeLast("]")
             val finalJsonStr = "[$cleanJson]"

@@ -3,8 +3,8 @@ package com.studyflow.app.domain.ai
 import java.io.File
 
 /**
- * Interfaces e Contratos para o futuro módulo de Inteligência Artificial do StudyFlow.
- * Esta arquitetura foi preparada para integração futura com a API da NVIDIA.
+ * Interfaces e Contratos para o módulo de Inteligência Artificial do StudyFlow
+ * integrado ao Gemini via Firebase AI Logic.
  */
 
 interface IntelligentTutor {

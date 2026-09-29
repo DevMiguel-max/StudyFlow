@@ -145,7 +145,7 @@ class EssayViewModel(
         _state.update { it.copy(error = null) }
     }
 
-    fun requestCorrection(submissionId: Int, model: String = "meta/llama3-70b-instruct", rigor: String = "Normal", detailed: Boolean = true) {
+    fun requestCorrection(submissionId: Int, model: String = "gemini-2.5-flash", rigor: String = "Normal", detailed: Boolean = true) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {

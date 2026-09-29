@@ -44,7 +44,7 @@ import androidx.room.RoomDatabase
         , AICacheEntity::class
     ],
     version = 14,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class StudyFlowDatabase : RoomDatabase() {
     abstract fun studyFlowDao(): StudyFlowDao

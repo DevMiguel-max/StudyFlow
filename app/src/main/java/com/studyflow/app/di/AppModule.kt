@@ -4,6 +4,7 @@ import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.studyflow.app.data.local.StudyFlowDatabase
+import com.studyflow.app.data.local.MIGRATION_7_8
 import com.studyflow.app.data.repository.StudyFlowRepositoryImpl
 import com.studyflow.app.domain.repository.StudyFlowRepository
 import com.studyflow.app.presentation.viewmodel.CalendarViewModel
@@ -127,30 +128,6 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
 
 
 
-val MIGRATION_8_9 = object : Migration(8, 9) {
-    override fun migrate(database: SupportSQLiteDatabase) {
-        // MANUAL REVIEW NEEDED: cannot infer schema delta for version 8->9
-    }
-}
-
-val MIGRATION_10_11 = object : Migration(10, 11) {
-    override fun migrate(database: SupportSQLiteDatabase) {
-        // MANUAL REVIEW NEEDED: cannot infer schema delta for version 10->11
-    }
-}
-
-val MIGRATION_11_12 = object : Migration(11, 12) {
-    override fun migrate(database: SupportSQLiteDatabase) {
-        // MANUAL REVIEW NEEDED: cannot infer schema delta for version 11->12
-    }
-}
-
-val MIGRATION_13_14 = object : Migration(13, 14) {
-    override fun migrate(database: SupportSQLiteDatabase) {
-        // MANUAL REVIEW NEEDED: cannot infer schema delta for version 13->14
-    }
-}
-
 val MIGRATION_9_10 = object : Migration(9, 10) {
     override fun migrate(database: SupportSQLiteDatabase) {
         // Recreate essay_corrections table with new fields
@@ -175,17 +152,26 @@ val MIGRATION_9_10 = object : Migration(9, 10) {
                 `revisedVersion` TEXT NOT NULL DEFAULT '',
                 `detailedAnalysisJson` TEXT NOT NULL DEFAULT '',
                 `competenciesDetailsJson` TEXT NOT NULL DEFAULT '',
-                `modelUsed` TEXT NOT NULL DEFAULT 'meta/llama3-70b-instruct',
+                `modelUsed` TEXT NOT NULL DEFAULT 'gemini-2.5-flash',
                 `isDetailed` INTEGER NOT NULL DEFAULT 1
             )
         """)
     }
 }
 
+val MIGRATION_13_14 = object : Migration(13, 14) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("CREATE TABLE IF NOT EXISTS `ai_cache` (`cacheKey` TEXT NOT NULL, `content` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `type` TEXT NOT NULL, PRIMARY KEY(`cacheKey`))")
+    }
+}
+
 val appModule = module {
-    single { com.studyflow.app.domain.ai.MentorService() }
-    single { com.studyflow.app.domain.ai.DocumentAnalyzerService() }
-    single { com.studyflow.app.domain.ai.MaterialGeneratorService() }
+    single { com.studyflow.app.domain.ai.GeminiClient() }
+    single { com.studyflow.app.domain.ai.MentorService(get()) }
+    single { com.studyflow.app.domain.ai.DocumentAnalyzerService(get()) }
+    single { com.studyflow.app.domain.ai.MaterialGeneratorService(get()) }
+    single { com.studyflow.app.domain.ai.AIEssayCorrectorService(get()) }
+    single { com.studyflow.app.domain.ai.AITutorService(get()) }
     single<com.studyflow.app.domain.repository.MaterialGeneratorRepository> { com.studyflow.app.data.repository.MaterialGeneratorRepositoryImpl(get()) }
     viewModel { com.studyflow.app.presentation.viewmodel.MaterialGeneratorViewModel(get(), get(), get(), get()) }
     single<com.studyflow.app.domain.repository.DocumentAnalyzerRepository> { com.studyflow.app.data.repository.DocumentAnalyzerRepositoryImpl(get()) }
@@ -199,14 +185,12 @@ val appModule = module {
         .addMigrations(
             MIGRATION_5_6,
             MIGRATION_6_7,
-            com.studyflow.app.data.local.MIGRATION_7_8,
-            MIGRATION_8_9,
+            MIGRATION_7_8,
             MIGRATION_9_10,
-            MIGRATION_10_11,
-            MIGRATION_11_12,
-            com.studyflow.app.di.MIGRATION_12_13,
+            MIGRATION_12_13,
             MIGRATION_13_14
         )
+        .fallbackToDestructiveMigrationFrom(5, 6, 7, 8, 9, 10, 11)
         .build()
     }
     

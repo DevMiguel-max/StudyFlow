@@ -1,8 +1,8 @@
 package com.studyflow.app.domain.ai
 
-import com.studyflow.app.BuildConfig
-
-class AITutorService {
+class AITutorService(
+    private val geminiClient: GeminiClient = GeminiClient()
+) {
     
     suspend fun sendMessage(
         modelName: String,
@@ -11,36 +11,31 @@ class AITutorService {
         history: List<Pair<String, Boolean>>, 
         message: String
     ): String {
-        val apiKey = BuildConfig.NVIDIA_API_KEY
+        val systemPrompt = PromptManager.getTutorSystemPrompt()
         
-        val messages = mutableListOf<NvidiaMessage>()
-        
-        // System prompt
-        messages.add(NvidiaMessage(role = "system", content = PromptManager.getTutorSystemPrompt()))
-        
-        // Chat history
-        history.forEach { (text, isUser) ->
-            val role = if (isUser) "user" else "assistant"
-            messages.add(NvidiaMessage(role = role, content = text))
+        val conversationHistory = buildString {
+            if (history.isNotEmpty()) {
+                append("Histórico da conversa:\n")
+                history.forEach { (text, isUser) ->
+                    val role = if (isUser) "Estudante" else "Tutor"
+                    append("$role: $text\n")
+                }
+                append("\n")
+            }
+            append("Mensagem do estudante: $message")
         }
         
-        // New message
-        messages.add(NvidiaMessage(role = "user", content = message))
-        
-        val request = NvidiaChatRequest(
-            model = modelName,
-            messages = messages,
-            temperature = temperature,
-            max_tokens = maxTokens
-        )
-        
         return try {
-            val response = NvidiaApiClient.api.generateCompletion("Bearer $apiKey", request)
-            response.choices.firstOrNull()?.message?.content ?: ""
+            val response = geminiClient.generateText(
+                prompt = conversationHistory,
+                systemInstruction = systemPrompt,
+                temperature = temperature,
+                maxOutputTokens = maxTokens,
+                modelName = if (modelName.contains("llama") || modelName.isBlank()) null else modelName
+            )
+            response.ifBlank { "Não foi possível obter uma resposta do tutor." }
         } catch (e: java.net.UnknownHostException) {
             "Sem conexão com a internet. Verifique sua rede."
-        } catch (e: retrofit2.HttpException) {
-            "Erro da API (código ${e.code()}). Verifique a chave de API configurada."
         } catch (e: Exception) {
             e.printStackTrace()
             "Erro ao se comunicar com o tutor AI: ${e.message ?: e::class.simpleName}"

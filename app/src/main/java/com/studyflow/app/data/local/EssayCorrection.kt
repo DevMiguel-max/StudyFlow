@@ -24,6 +24,6 @@ data class EssayCorrection(
     val revisedVersion: String = "",
     val detailedAnalysisJson: String = "",
     val competenciesDetailsJson: String = "",
-    val modelUsed: String = "meta/llama3-70b-instruct",
+    val modelUsed: String = "gemini-2.5-flash",
     val isDetailed: Boolean = true
 )

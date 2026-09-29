@@ -1,7 +1,6 @@
 package com.studyflow.app.domain.ai
 
 import com.studyflow.app.data.local.*
-import com.studyflow.app.BuildConfig
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -29,8 +28,10 @@ data class MissionDto(
     val xpReward: Int
 )
 
-class MentorService {
-    private val json = Json { ignoreUnknownKeys = true }
+class MentorService(
+    private val geminiClient: GeminiClient = GeminiClient()
+) {
+    private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
     suspend fun analyzeProgress(
         profile: MentorProfile,
@@ -40,9 +41,6 @@ class MentorService {
         goals: List<StudyGoal>,
         simulations: List<Simulation>
     ): MentorAnalysisResult {
-        
-        val apiKey = BuildConfig.NVIDIA_API_KEY
-        
         val prompt = """
             Você é um Mentor Inteligente de estudos.
             Analise os dados do estudante e forneça recomendações personalizadas e missões.
@@ -82,24 +80,21 @@ class MentorService {
             }
         """.trimIndent()
 
-        val request = NvidiaChatRequest(
-            model = "meta/llama-3.1-405b-instruct",
-            messages = listOf(
-                NvidiaMessage(role = "system", content = "Você é um AI Mentor para estudos."),
-                NvidiaMessage(role = "user", content = prompt)
-            )
-        )
-
         return try {
-            val response = NvidiaApiClient.api.generateCompletion("Bearer $apiKey", request)
-            var jsonText = response.choices.firstOrNull()?.message?.content ?: "{}"
-            jsonText = jsonText.replace("```json", "").replace("```", "").trim()
+            val responseText = geminiClient.generateText(
+                prompt = prompt,
+                systemInstruction = "Você é um AI Mentor para estudos."
+            )
+            var cleanJson = responseText.replace("```json", "").replace("```", "").trim()
+            val startIndex = cleanJson.indexOf("{")
+            val endIndex = cleanJson.lastIndexOf("}")
+            if (startIndex != -1 && endIndex != -1) {
+                cleanJson = cleanJson.substring(startIndex, endIndex + 1)
+            }
             
-            json.decodeFromString<MentorAnalysisResult>(jsonText)
+            json.decodeFromString<MentorAnalysisResult>(cleanJson)
         } catch (e: java.net.UnknownHostException) {
             throw Exception("Sem conexão com a internet. Verifique sua rede.", e)
-        } catch (e: retrofit2.HttpException) {
-            throw Exception("Erro da API (código ${e.code()}). Verifique a chave de API configurada.", e)
         } catch (e: Exception) {
             e.printStackTrace()
             throw e

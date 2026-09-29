@@ -2,9 +2,10 @@ package com.studyflow.app.domain.ai
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.decodeFromString
-import com.studyflow.app.BuildConfig
 
-class AIEssayCorrectorService {
+class AIEssayCorrectorService(
+    private val geminiClient: GeminiClient = GeminiClient()
+) {
     
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
@@ -15,9 +16,6 @@ class AIEssayCorrectorService {
         themeTitle: String,
         motivationalTexts: String
     ): AICorrectionResult {
-        // Obter chave da API do NVIDIA NIM (usando a mesma variável por conveniência, ou NVIDIA_API_KEY se configurada)
-        val apiKey = BuildConfig.NVIDIA_API_KEY
-        
         val prompt = """
             Tema: $themeTitle
             
@@ -29,20 +27,18 @@ class AIEssayCorrectorService {
             
             Avalie a redação acima seguindo as diretrizes do ENEM. Retorne apenas o JSON.
         """.trimIndent()
-        
-        val request = NvidiaChatRequest(
-            model = modelName, // ex: "meta/llama3-70b-instruct"
-            temperature = temperature,
-            messages = listOf(
-                NvidiaMessage(role = "system", content = PromptManager.getEssayCorrectionPrompt()),
-                NvidiaMessage(role = "user", content = prompt)
-            ),
-            max_tokens = 2048
-        )
 
-        val response = NvidiaApiClient.api.generateCompletion("Bearer $apiKey", request)
+        val responseText = geminiClient.generateText(
+            prompt = prompt,
+            systemInstruction = PromptManager.getEssayCorrectionPrompt(),
+            temperature = temperature,
+            maxOutputTokens = 2048,
+            modelName = if (modelName.contains("llama") || modelName.isBlank()) null else modelName
+        )
         
-        val responseText = response.choices.firstOrNull()?.message?.content ?: throw Exception("Resposta vazia da IA da NVIDIA")
+        if (responseText.isBlank()) {
+            throw Exception("Resposta vazia da IA")
+        }
         
         // Limpar o JSON (remover blocos de markdown e chaves residuais)
         var cleanJson = responseText.replace("```json", "").replace("```", "").trim()
