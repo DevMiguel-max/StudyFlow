@@ -31,7 +31,9 @@ class AuthRepositoryImpl(
     }
 
     override suspend fun signInWithEmail(email: String, pass: String): Result<AuthUser> = runCatching {
-        throw UnsupportedOperationException("Autenticação por e-mail/senha não suportada. Use o login com o Google.")
+        val result = auth.signInWithEmailAndPassword(email.trim(), pass).await()
+        val user = result.user ?: throw Exception("User null")
+        AuthUser(user.uid, user.email, user.displayName, user.photoUrl?.toString())
     }
 
     override suspend fun signInWithGoogle(idToken: String): Result<AuthUser> = runCatching {
@@ -42,11 +44,13 @@ class AuthRepositoryImpl(
     }
 
     override suspend fun signUpWithEmail(email: String, pass: String): Result<AuthUser> = runCatching {
-        throw UnsupportedOperationException("Autenticação por e-mail/senha não suportada. Use o login com o Google.")
+        val result = auth.createUserWithEmailAndPassword(email.trim(), pass).await()
+        val user = result.user ?: throw Exception("User null")
+        AuthUser(user.uid, user.email, user.displayName, user.photoUrl?.toString())
     }
 
     override suspend fun recoverPassword(email: String): Result<Unit> = runCatching {
-        auth.sendPasswordResetEmail(email).await()
+        auth.sendPasswordResetEmail(email.trim()).await()
     }
 
     override suspend fun signOut() {

@@ -1,7 +1,13 @@
 package com.studyflow.app.presentation.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.studyflow.app.domain.repository.AuthRepository
 import com.studyflow.app.domain.repository.AuthUser
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +31,20 @@ class AuthViewModel(
     private val _state = MutableStateFlow(AuthState())
     val state: StateFlow<AuthState> = _state
 
+    private fun mapAuthException(e: Throwable?): String {
+        if (e != null) {
+            Log.e("AuthViewModel", "Erro de autenticação", e)
+        }
+        return when (e) {
+            is FirebaseAuthInvalidUserException,
+            is FirebaseAuthInvalidCredentialsException -> "E-mail ou senha incorretos"
+            is FirebaseAuthUserCollisionException -> "Este e-mail já está cadastrado"
+            is FirebaseAuthWeakPasswordException -> "Senha muito fraca"
+            is FirebaseNetworkException -> "Sem conexão"
+            else -> "Ocorreu um erro. Tente novamente."
+        }
+    }
+
     fun signInWithEmail(email: String, pass: String) {
         viewModelScope.launch {
             _state.value = AuthState(isLoading = true)
@@ -32,7 +52,7 @@ class AuthViewModel(
             if (result.isSuccess) {
                 _state.value = AuthState(isSuccess = true)
             } else {
-                _state.value = AuthState(error = result.exceptionOrNull()?.message ?: "Erro desconhecido")
+                _state.value = AuthState(error = mapAuthException(result.exceptionOrNull()))
             }
         }
     }
@@ -44,7 +64,7 @@ class AuthViewModel(
             if (result.isSuccess) {
                 _state.value = AuthState(isSuccess = true)
             } else {
-                _state.value = AuthState(error = result.exceptionOrNull()?.message ?: "Erro desconhecido")
+                _state.value = AuthState(error = mapAuthException(result.exceptionOrNull()))
             }
         }
     }
@@ -56,7 +76,7 @@ class AuthViewModel(
             if (result.isSuccess) {
                 _state.value = AuthState(isSuccess = true)
             } else {
-                _state.value = AuthState(error = result.exceptionOrNull()?.message ?: "Erro desconhecido")
+                _state.value = AuthState(error = mapAuthException(result.exceptionOrNull()))
             }
         }
     }
@@ -68,7 +88,7 @@ class AuthViewModel(
             if (result.isSuccess) {
                 _state.value = AuthState(isSuccess = true)
             } else {
-                _state.value = AuthState(error = result.exceptionOrNull()?.message ?: "Erro desconhecido")
+                _state.value = AuthState(error = mapAuthException(result.exceptionOrNull()))
             }
         }
     }
