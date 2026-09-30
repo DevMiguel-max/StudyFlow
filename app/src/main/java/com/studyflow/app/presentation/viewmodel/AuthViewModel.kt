@@ -3,7 +3,9 @@ package com.studyflow.app.presentation.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.FirebaseException
 import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
@@ -35,13 +37,31 @@ class AuthViewModel(
         if (e != null) {
             Log.e("AuthViewModel", "Erro de autenticação", e)
         }
+        val message = e?.message.orEmpty()
         return when (e) {
             is FirebaseAuthInvalidUserException,
             is FirebaseAuthInvalidCredentialsException -> "E-mail ou senha incorretos"
             is FirebaseAuthUserCollisionException -> "Este e-mail já está cadastrado"
             is FirebaseAuthWeakPasswordException -> "Senha muito fraca"
             is FirebaseNetworkException -> "Sem conexão"
-            else -> "Ocorreu um erro. Tente novamente."
+            is FirebaseAuthException -> when (e.errorCode) {
+                "ERROR_OPERATION_NOT_ALLOWED" -> "Cadastro por e-mail não está habilitado no Firebase"
+                "ERROR_INVALID_EMAIL" -> "E-mail inválido"
+                "ERROR_TOO_MANY_REQUESTS" -> "Muitas tentativas. Tente mais tarde"
+                "ERROR_EMAIL_ALREADY_IN_USE" -> "Este e-mail já está cadastrado"
+                else -> "Ocorreu um erro (${e.javaClass.simpleName}). Tente novamente."
+            }
+            is FirebaseException -> if (
+                message.contains("App Check", ignoreCase = true) ||
+                message.contains("attestation", ignoreCase = true) ||
+                message.contains("blocked", ignoreCase = true) ||
+                message.contains("internal error", ignoreCase = true)
+            ) {
+                "Falha de verificação do app (App Check). Tente novamente ou contate o suporte"
+            } else {
+                "Ocorreu um erro (${e.javaClass.simpleName}). Tente novamente."
+            }
+            else -> "Ocorreu um erro (${e?.javaClass?.simpleName}). Tente novamente."
         }
     }
 
