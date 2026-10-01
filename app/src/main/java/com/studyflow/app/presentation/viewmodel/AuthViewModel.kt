@@ -44,11 +44,14 @@ class AuthViewModel(
             is FirebaseAuthUserCollisionException -> "Este e-mail já está cadastrado"
             is FirebaseAuthWeakPasswordException -> "Senha muito fraca"
             is FirebaseNetworkException -> "Sem conexão"
-            is FirebaseAuthException -> when (e.errorCode) {
-                "ERROR_OPERATION_NOT_ALLOWED" -> "Cadastro por e-mail não está habilitado no Firebase"
-                "ERROR_INVALID_EMAIL" -> "E-mail inválido"
-                "ERROR_TOO_MANY_REQUESTS" -> "Muitas tentativas. Tente mais tarde"
-                "ERROR_EMAIL_ALREADY_IN_USE" -> "Este e-mail já está cadastrado"
+            is FirebaseAuthException -> when {
+                e.errorCode == "ERROR_OPERATION_NOT_ALLOWED" ||
+                e.errorCode == "OPERATION_NOT_ALLOWED" ||
+                message.contains("operation is not allowed", ignoreCase = true) ->
+                    "Cadastro por e-mail não está habilitado no Firebase"
+                e.errorCode in listOf("ERROR_INVALID_EMAIL", "INVALID_EMAIL") -> "E-mail inválido"
+                e.errorCode in listOf("ERROR_TOO_MANY_REQUESTS", "TOO_MANY_REQUESTS") -> "Muitas tentativas. Tente mais tarde"
+                e.errorCode in listOf("ERROR_EMAIL_ALREADY_IN_USE", "EMAIL_ALREADY_IN_USE") -> "Este e-mail já está cadastrado"
                 else -> "Ocorreu um erro (${e.javaClass.simpleName}). Tente novamente."
             }
             is FirebaseException -> if (
