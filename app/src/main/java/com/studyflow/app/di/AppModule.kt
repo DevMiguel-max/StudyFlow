@@ -199,7 +199,14 @@ val appModule = module {
     single { com.studyflow.app.domain.ai.AIMetadataManager(androidContext()) }
     
     single { FirebaseAuth.getInstance() }
-    single { FirebaseFirestore.getInstance(androidContext().getString(com.studyflow.app.R.string.firestore_database_id)) }
+    single {
+        val dbId = androidContext().getString(com.studyflow.app.R.string.firestore_database_id)
+        if (dbId.isBlank() || dbId == "(default)") {
+            FirebaseFirestore.getInstance()
+        } else {
+            FirebaseFirestore.getInstance(dbId)
+        }
+    }
     
     single<AuthRepository> { AuthRepositoryImpl(get(), androidContext()) }
     single<SyncRepository> { SyncRepositoryImpl(get(), get(), get<com.studyflow.app.data.local.StudyFlowDatabase>().studyFlowDao()) }
