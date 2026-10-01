@@ -117,6 +117,21 @@ fun HomeScreen(
                     }
                 )
                 
+                Spacer(modifier = Modifier.height(20.dp))
+                
+                DailyTipCard(
+                    tip = state.studyTip,
+                    isLoading = state.isTipLoading,
+                    onRefreshClick = { viewModel.loadDailyTip(forceRefresh = true) },
+                    onTryTechniqueClick = { technique ->
+                        when {
+                            technique.contains("Pomodoro", ignoreCase = true) -> navController.navigate("pomodoro")
+                            technique.contains("Feynman", ignoreCase = true) -> navController.navigate("feynman")
+                            else -> navController.navigate("study_methods")
+                        }
+                    }
+                )
+                
                 if (state.upcomingExamDays != null) {
                     Spacer(modifier = Modifier.height(16.dp))
                     AppCard(containerColor = Color(0xFFFEF3C7)) {

@@ -8,11 +8,14 @@ import com.studyflow.app.data.local.Task
 import com.studyflow.app.domain.repository.StudyFlowRepository
 import com.studyflow.app.data.local.StudyMethodsData
 import com.studyflow.app.data.local.StudyMethodModel
+import com.studyflow.app.domain.ai.StudyTip
+import com.studyflow.app.domain.ai.StudyTipService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 data class HomeState(
@@ -30,12 +33,31 @@ data class HomeState(
     val timeStudiedTodayMinutes: Int = 0,
     val lastTechniqueUsed: StudyMethodModel? = null,
     val totalSessionsCompleted: Int = 0,
-    val userProfile: com.studyflow.app.data.local.UserProfile? = null
+    val userProfile: com.studyflow.app.data.local.UserProfile? = null,
+    val studyTip: StudyTip? = null,
+    val isTipLoading: Boolean = false
 )
 
-class HomeViewModel(private val repository: StudyFlowRepository) : ViewModel() {
+class HomeViewModel(
+    private val repository: StudyFlowRepository,
+    private val studyTipService: StudyTipService = StudyTipService()
+) : ViewModel() {
 
-    val state: StateFlow<HomeState> = combine(
+    private val _tipState = MutableStateFlow<Pair<StudyTip?, Boolean>>(Pair(null, true))
+
+    init {
+        loadDailyTip(forceRefresh = false)
+    }
+
+    fun loadDailyTip(forceRefresh: Boolean = false) {
+        viewModelScope.launch {
+            _tipState.value = _tipState.value.copy(second = true)
+            val tip = studyTipService.getDailyTip(forceRefresh)
+            _tipState.value = Pair(tip, false)
+        }
+    }
+
+    private val baseState = combine(
         repository.getSubjects(),
         repository.getTasks(),
         repository.getStudyPlans(),
@@ -103,6 +125,13 @@ class HomeViewModel(private val repository: StudyFlowRepository) : ViewModel() {
             lastTechniqueUsed = lastTech,
             totalSessionsCompleted = sessions.count { it.status == "completed" },
             userProfile = profile
+        )
+    }
+
+    val state: StateFlow<HomeState> = combine(baseState, _tipState) { base, tipInfo ->
+        base.copy(
+            studyTip = tipInfo.first,
+            isTipLoading = tipInfo.second
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HomeState())
     

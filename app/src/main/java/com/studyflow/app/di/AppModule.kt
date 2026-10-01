@@ -172,6 +172,7 @@ val appModule = module {
     single { com.studyflow.app.domain.ai.MaterialGeneratorService(get()) }
     single { com.studyflow.app.domain.ai.AIEssayCorrectorService(get()) }
     single { com.studyflow.app.domain.ai.AITutorService(get()) }
+    single { com.studyflow.app.domain.ai.StudyTipService(get()) }
     single<com.studyflow.app.domain.repository.MaterialGeneratorRepository> { com.studyflow.app.data.repository.MaterialGeneratorRepositoryImpl(get()) }
     viewModel { com.studyflow.app.presentation.viewmodel.MaterialGeneratorViewModel(get(), get(), get(), get()) }
     single<com.studyflow.app.domain.repository.DocumentAnalyzerRepository> { com.studyflow.app.data.repository.DocumentAnalyzerRepositoryImpl(get()) }
@@ -215,7 +216,7 @@ val appModule = module {
     single { com.studyflow.app.domain.manager.GamificationManager(get()) }
     
     viewModel { com.studyflow.app.presentation.viewmodel.MentorViewModel(get(), get(), get()) }
-    viewModel { HomeViewModel(get()) }
+    viewModel { HomeViewModel(get(), get()) }
     viewModel { SubjectViewModel(get()) }
     viewModel { TaskViewModel(get(), get()) }
     viewModel { CalendarViewModel(get()) }
