@@ -28,29 +28,33 @@ class AIEssayCorrectorService(
             Avalie a redação acima seguindo as diretrizes do ENEM. Retorne apenas o JSON.
         """.trimIndent()
 
-        val responseText = geminiClient.generateText(
-            prompt = prompt,
-            systemInstruction = PromptManager.getEssayCorrectionPrompt(),
-            temperature = temperature,
-            maxOutputTokens = 2048,
-            modelName = if (modelName.contains("llama") || modelName.isBlank()) null else modelName
-        )
+        val responseText = try {
+            geminiClient.generateText(
+                prompt = prompt,
+                systemInstruction = PromptManager.getEssayCorrectionPrompt(),
+                temperature = temperature,
+                maxOutputTokens = 2048,
+                modelName = if (modelName.contains("llama") || modelName.isBlank()) null else modelName
+            )
+        } catch (e: Exception) {
+            throw e.toAIError()
+        }
         
         if (responseText.isBlank()) {
-            throw Exception("Resposta vazia da IA")
-        }
-        if (responseText == "Modelo indisponível" || responseText.contains("Modelo indisponível", ignoreCase = true)) {
-            throw Exception("Modelo indisponível")
+            throw AIError.Unknown("Resposta vazia da IA ao analisar redação.")
         }
         
-        // Limpar o JSON (remover blocos de markdown e chaves residuais)
-        var cleanJson = responseText.replace("```json", "").replace("```", "").trim()
-        val startIndex = cleanJson.indexOf("{")
-        val endIndex = cleanJson.lastIndexOf("}")
-        if (startIndex != -1 && endIndex != -1) {
-            cleanJson = cleanJson.substring(startIndex, endIndex + 1)
+        return try {
+            // Limpar o JSON (remover blocos de markdown e chaves residuais)
+            var cleanJson = responseText.replace("```json", "").replace("```", "").trim()
+            val startIndex = cleanJson.indexOf("{")
+            val endIndex = cleanJson.lastIndexOf("}")
+            if (startIndex != -1 && endIndex != -1) {
+                cleanJson = cleanJson.substring(startIndex, endIndex + 1)
+            }
+            json.decodeFromString(cleanJson)
+        } catch (e: Exception) {
+            throw AIError.Unknown("Falha ao interpretar a avaliação estruturada da redação.", e)
         }
-        
-        return json.decodeFromString(cleanJson)
     }
 }

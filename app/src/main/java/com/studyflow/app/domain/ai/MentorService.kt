@@ -85,8 +85,8 @@ class MentorService(
                 prompt = prompt,
                 systemInstruction = "Você é um AI Mentor para estudos."
             )
-            if (responseText == "Modelo indisponível" || responseText.contains("Modelo indisponível", ignoreCase = true)) {
-                throw Exception("Modelo indisponível")
+            if (responseText.isBlank()) {
+                throw AIError.Unknown("Resposta vazia recebida do AI Mentor.")
             }
             var cleanJson = responseText.replace("```json", "").replace("```", "").trim()
             val startIndex = cleanJson.indexOf("{")
@@ -96,11 +96,8 @@ class MentorService(
             }
             
             json.decodeFromString<MentorAnalysisResult>(cleanJson)
-        } catch (e: java.net.UnknownHostException) {
-            throw Exception("Sem conexão com a internet. Verifique sua rede.", e)
         } catch (e: Exception) {
-            e.printStackTrace()
-            throw e
+            throw e.toAIError()
         }
     }
 }

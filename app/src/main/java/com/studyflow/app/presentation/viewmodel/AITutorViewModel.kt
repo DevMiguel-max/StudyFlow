@@ -100,12 +100,48 @@ class AITutorViewModel(
                 }
                 
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message ?: "Erro ao gerar resposta.") }
-                // Optionally insert error message block
+                _state.update { it.copy(error = e.localizedMessage ?: "Erro ao se comunicar com o tutor AI.") }
             } finally {
                 _state.update { it.copy(isGenerating = false) }
             }
         }
+    }
+
+    fun regenerateLastMessage() {
+        val convId = state.value.currentConversationId ?: return
+        val currentMessages = state.value.messages
+        val lastUserMessage = currentMessages.lastOrNull { it.isUser } ?: return
+        
+        viewModelScope.launch {
+            _state.update { it.copy(isGenerating = true, error = null) }
+            
+            // History prior to the last user message
+            val index = currentMessages.lastIndexOf(lastUserMessage)
+            val history = if (index > 0) {
+                currentMessages.take(index).map { Pair(it.text, it.isUser) }
+            } else emptyList()
+            
+            try {
+                val responseText = aiService.sendMessage(
+                    modelName = state.value.selectedModel,
+                    temperature = state.value.temperature,
+                    maxTokens = state.value.maxTokens,
+                    history = history,
+                    message = lastUserMessage.text
+                )
+                
+                val aiMsg = AIMessage(conversationId = convId, text = responseText, isUser = false)
+                repository.insertAIMessage(aiMsg)
+            } catch (e: Exception) {
+                _state.update { it.copy(error = e.localizedMessage ?: "Erro ao regenerar resposta.") }
+            } finally {
+                _state.update { it.copy(isGenerating = false) }
+            }
+        }
+    }
+
+    fun clearError() {
+        _state.update { it.copy(error = null) }
     }
 
     fun deleteConversation(id: Long) {

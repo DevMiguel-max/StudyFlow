@@ -17,9 +17,11 @@ class StudyFlowApplication : Application() {
         }
         AppCheckInitializer.init()
 
-        startKoin {
-            androidContext(this@StudyFlowApplication)
-            modules(appModule)
+        if (org.koin.core.context.GlobalContext.getOrNull() == null) {
+            startKoin {
+                androidContext(this@StudyFlowApplication)
+                modules(appModule)
+            }
         }
     }
 }

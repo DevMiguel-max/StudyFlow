@@ -20,6 +20,11 @@ data class StatisticsState(
     val studyStreak: Int = 0,
     val upcomingReviewsCount: Int = 0,
     val upcomingTasksCount: Int = 0,
+    val last7DaysHistory: List<DailyStudyPoint> = emptyList(),
+    val dailyGoalMinutes: Int = 120,
+    val dailyGoalProgressPercent: Float = 0f,
+    val tasksCompletedToday: Int = 0,
+    val tasksTotalToday: Int = 0,
     
     // Matérias
     val subjectStats: List<SubjectStat> = emptyList(),
@@ -39,6 +44,13 @@ data class StatisticsState(
     // Insights
     val insights: List<String> = emptyList(),
     val userProfile: com.studyflow.app.data.local.UserProfile? = null
+)
+
+data class DailyStudyPoint(
+    val dayLabel: String,
+    val dateMillis: Long,
+    val minutes: Int,
+    val isToday: Boolean = false
 )
 
 data class SubjectStat(
@@ -260,6 +272,36 @@ class StatisticsViewModel(private val repository: StudyFlowRepository) : ViewMod
              generatedInsights.add("Seu tempo de estudo aumentou nesta semana!")
         }
 
+        // 7-day history for Recharts-style visual dashboard
+        val dayLabels = listOf("Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb")
+        val last7Days = (6 downTo 0).map { daysAgo ->
+            val cal = Calendar.getInstance().apply {
+                timeInMillis = now
+                add(Calendar.DAY_OF_YEAR, -daysAgo)
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            val start = cal.timeInMillis
+            val end = start + TimeUnit.DAYS.toMillis(1) - 1
+            val dayMinutes = completedSessions.filter { it.date in start..end }.sumOf { it.durationMinutes }
+            val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK)
+            val label = dayLabels[(dayOfWeek - 1).coerceIn(0, 6)]
+            DailyStudyPoint(
+                dayLabel = label,
+                dateMillis = start,
+                minutes = dayMinutes,
+                isToday = daysAgo == 0
+            )
+        }
+
+        val todayEnd = todayStart + TimeUnit.DAYS.toMillis(1) - 1
+        val todayTasks = tasks.filter { it.date != null && it.date in todayStart..todayEnd }
+        val targetMinutesToday = todayTasks.sumOf { it.estimatedMinutes }.let { if (it > 0) it else 120 }
+        val tasksCompletedToday = todayTasks.count { it.status == "completed" }
+        val goalProgressPercent = ((timeToday.toFloat() / targetMinutesToday) * 100f).coerceIn(0f, 100f)
+
         return StatisticsState(
             timeStudiedToday = timeToday,
             timeStudiedWeek = timeWeek,
@@ -270,6 +312,11 @@ class StatisticsViewModel(private val repository: StudyFlowRepository) : ViewMod
             studyStreak = streak,
             upcomingReviewsCount = upcomingReviews,
             upcomingTasksCount = upcomingTasks,
+            last7DaysHistory = last7Days,
+            dailyGoalMinutes = targetMinutesToday,
+            dailyGoalProgressPercent = goalProgressPercent,
+            tasksCompletedToday = tasksCompletedToday,
+            tasksTotalToday = todayTasks.size,
             subjectStats = subjectStatsList,
             methodStats = finalMethodStats,
             essayStats = essayStats,

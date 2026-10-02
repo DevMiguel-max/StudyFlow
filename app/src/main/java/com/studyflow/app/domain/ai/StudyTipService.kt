@@ -94,7 +94,7 @@ class StudyTipService(
                 systemInstruction = "Você é um assistente de estudos que responde exclusivamente em formato JSON.",
                 temperature = 0.7f,
                 maxOutputTokens = 600,
-                modelName = "gemini-3.5-flash"
+                modelName = AIConfig.MODEL
             )
 
             val cleaned = cleanJson(rawResponse)

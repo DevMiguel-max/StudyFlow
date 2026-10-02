@@ -82,7 +82,8 @@ fun AITutorScreen(
                 ChatInterface(
                     state = state,
                     onSendMessage = { viewModel.sendMessage(it) },
-                    onClearHistory = { viewModel.clearHistory() }
+                    onClearHistory = { viewModel.clearHistory() },
+                    onRegenerate = { viewModel.regenerateLastMessage() }
                 )
             }
         }
@@ -158,15 +159,40 @@ fun ConversationList(
 fun ChatInterface(
     state: com.studyflow.app.presentation.viewmodel.AITutorState,
     onSendMessage: (String) -> Unit,
-    onClearHistory: () -> Unit
+    onClearHistory: () -> Unit,
+    onRegenerate: () -> Unit
 ) {
     var inputText by remember { mutableStateOf("") }
     val context = LocalContext.current
     
     Column(modifier = Modifier.fillMaxSize()) {
         if (state.error != null) {
-            Surface(color = MaterialTheme.colorScheme.errorContainer, modifier = Modifier.fillMaxWidth()) {
-                Text(state.error!!, color = MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.padding(8.dp))
+            Surface(
+                color = MaterialTheme.colorScheme.errorContainer,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = state.error!!,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = onRegenerate,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        )
+                    ) {
+                        Text("Tentar novamente")
+                    }
+                }
             }
         }
         
@@ -180,7 +206,7 @@ fun ChatInterface(
                 }
             }
             items(state.messages.reversed()) { msg ->
-                MessageBubble(msg, context)
+                MessageBubble(msg, context, onRegenerate)
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
@@ -226,7 +252,7 @@ fun ChatInterface(
 }
 
 @Composable
-fun MessageBubble(message: AIMessage, context: Context) {
+fun MessageBubble(message: AIMessage, context: Context, onRegenerate: () -> Unit) {
     val isUser = message.isUser
     val bgColor = if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
     val textColor = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
@@ -288,9 +314,7 @@ fun MessageBubble(message: AIMessage, context: Context) {
                 }, modifier = Modifier.size(32.dp)) {
                     Icon(Icons.Default.Share, "Compartilhar", modifier = Modifier.size(16.dp))
                 }
-                IconButton(onClick = {
-                    Toast.makeText(context, "Regenerar estará disponível em breve.", Toast.LENGTH_SHORT).show()
-                }, modifier = Modifier.size(32.dp)) {
+                IconButton(onClick = onRegenerate, modifier = Modifier.size(32.dp)) {
                     Icon(Icons.Default.Refresh, "Regenerar", modifier = Modifier.size(16.dp))
                 }
                 IconButton(onClick = {

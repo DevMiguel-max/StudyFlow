@@ -31,11 +31,18 @@ class MaterialGeneratorService(
             val language = options["language"] ?: "português"
             val fullPrompt = "$systemPrompt\n\nResponda em $language.\n\nTexto original:\n${sourceText.take(15000)}"
 
-            val response = geminiClient.generateText(
-                prompt = fullPrompt,
-                systemInstruction = systemPrompt
-            )
-            response.ifBlank { "Não foi possível gerar o material." }
+            val response = try {
+                geminiClient.generateText(
+                    prompt = fullPrompt,
+                    systemInstruction = systemPrompt
+                )
+            } catch (e: Exception) {
+                throw e.toAIError()
+            }
+            if (response.isBlank()) {
+                throw AIError.Unknown("Não foi possível gerar o material.")
+            }
+            response
         }
     }
 
@@ -56,14 +63,20 @@ class MaterialGeneratorService(
                 Não adicione crases Markdown (` ```json `), responda apenas com o JSON cru.
             """.trimIndent()
 
-            val responseText = geminiClient.generateText(
-                prompt = "Texto:\n${sourceText.take(15000)}",
-                systemInstruction = systemPrompt,
-                temperature = 0.3f
-            )
-            val jsonText = responseText.ifBlank { "[]" }
+            val responseText = try {
+                geminiClient.generateText(
+                    prompt = "Texto:\n${sourceText.take(15000)}",
+                    systemInstruction = systemPrompt,
+                    temperature = 0.3f
+                )
+            } catch (e: Exception) {
+                throw e.toAIError()
+            }
+            if (responseText.isBlank()) {
+                throw AIError.Unknown("Resposta vazia da IA ao gerar flashcards.")
+            }
             
-            val cleanJson = jsonText.substringAfter("[").substringBeforeLast("]")
+            val cleanJson = responseText.substringAfter("[").substringBeforeLast("]")
             val finalJsonStr = "[$cleanJson]"
             
             val jsonArray = Json.parseToJsonElement(finalJsonStr).jsonArray
@@ -101,14 +114,20 @@ class MaterialGeneratorService(
                 Não adicione crases Markdown (` ```json `), responda apenas com o JSON cru.
             """.trimIndent()
 
-            val responseText = geminiClient.generateText(
-                prompt = "Texto:\n${sourceText.take(15000)}",
-                systemInstruction = systemPrompt,
-                temperature = 0.3f
-            )
-            val jsonText = responseText.ifBlank { "[]" }
+            val responseText = try {
+                geminiClient.generateText(
+                    prompt = "Texto:\n${sourceText.take(15000)}",
+                    systemInstruction = systemPrompt,
+                    temperature = 0.3f
+                )
+            } catch (e: Exception) {
+                throw e.toAIError()
+            }
+            if (responseText.isBlank()) {
+                throw AIError.Unknown("Resposta vazia da IA ao gerar questões.")
+            }
             
-            val cleanJson = jsonText.substringAfter("[").substringBeforeLast("]")
+            val cleanJson = responseText.substringAfter("[").substringBeforeLast("]")
             val finalJsonStr = "[$cleanJson]"
             
             val jsonArray = Json.parseToJsonElement(finalJsonStr).jsonArray

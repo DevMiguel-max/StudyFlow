@@ -50,14 +50,7 @@ class GeminiClient(
             response.text ?: ""
         } catch (e: Exception) {
             Log.e(TAG, "Exceção capturada ao gerar conteúdo com o modelo $targetModel", e)
-            val errorMsg = e.message.orEmpty()
-            if (errorMsg.contains("404") || errorMsg.contains("NOT_FOUND", ignoreCase = true) || errorMsg.contains("not found", ignoreCase = true)) {
-                "modelo indisponível"
-            } else if (errorMsg.contains("403") || errorMsg.contains("PERMISSION_DENIED", ignoreCase = true) || errorMsg.contains("permission denied", ignoreCase = true)) {
-                "App Check ou API não habilitados"
-            } else {
-                throw e
-            }
+            throw e.toAIError()
         }
     }
 
@@ -71,14 +64,7 @@ class GeminiClient(
             .map { it.text ?: "" }
             .catch { e ->
                 Log.e(TAG, "Exceção capturada no stream do modelo $targetModel", e)
-                val errorMsg = e.message.orEmpty()
-                if (errorMsg.contains("404") || errorMsg.contains("NOT_FOUND", ignoreCase = true) || errorMsg.contains("not found", ignoreCase = true)) {
-                    emit("modelo indisponível")
-                } else if (errorMsg.contains("403") || errorMsg.contains("PERMISSION_DENIED", ignoreCase = true) || errorMsg.contains("permission denied", ignoreCase = true)) {
-                    emit("App Check ou API não habilitados")
-                } else {
-                    throw e
-                }
+                throw e.toAIError()
             }
     }
 }

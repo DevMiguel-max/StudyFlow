@@ -51,9 +51,30 @@ class DocumentAnalyzerViewModel(
                 val type = if (docType.contains("EDITAL")) "EDITAL" else if (docType.contains("LIVRO")) "LIVRO" else "OUTROS"
 
                 // 3. Análise principal
-                _state.value = _state.value.copy(progressMessage = "Realizando análise por IA...")
-                val analysisType = if (type == "EDITAL") "EDITAL_ANALYSIS" else "ANALYSIS"
-                val analysisResult = service.analyzeDocument(textContent, analysisType)
+                _state.value = _state.value.copy(progressMessage = "Realizando análise estruturada por IA...")
+                val analysisResult = if (type == "EDITAL") {
+                    val editalData = service.analyzeEditalProgram(textContent)
+                    buildString {
+                        append("# ${editalData.cargo.ifBlank { "Edital" }}\n\n")
+                        if (editalData.banca.isNotBlank()) append("**Banca:** ${editalData.banca}\n\n")
+                        append("## Disciplinas e Conteúdo Programático\n\n")
+                        editalData.disciplinas.forEach { d ->
+                            append("### 📚 ${d.nome}\n")
+                            if (d.conteudoProgramatico.isNotBlank()) {
+                                append("${d.conteudoProgramatico}\n\n")
+                            }
+                            if (d.assuntos.isNotEmpty()) {
+                                append("**Assuntos detalhados:**\n")
+                                d.assuntos.forEach { a ->
+                                    append("- $a\n")
+                                }
+                                append("\n")
+                            }
+                        }
+                    }
+                } else {
+                    service.analyzeDocument(textContent, "ANALYSIS")
+                }
 
                 // 4. Salvar documento original
                 val document = AnalyzedDocument(
@@ -71,7 +92,7 @@ class DocumentAnalyzerViewModel(
 
             } catch (e: Exception) {
                 e.printStackTrace()
-                _state.value = _state.value.copy(error = e.message ?: "Falha no processamento do documento.")
+                _state.value = _state.value.copy(error = e.localizedMessage ?: e.message ?: "Falha no processamento do documento.")
             } finally {
                 _state.value = _state.value.copy(isProcessing = false)
             }

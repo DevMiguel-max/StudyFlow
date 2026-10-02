@@ -25,20 +25,21 @@ class AITutorService(
             append("Mensagem do estudante: $message")
         }
         
-        return try {
-            val response = geminiClient.generateText(
+        val response = try {
+            geminiClient.generateText(
                 prompt = conversationHistory,
                 systemInstruction = systemPrompt,
                 temperature = temperature,
                 maxOutputTokens = maxTokens,
                 modelName = if (modelName.contains("llama") || modelName.isBlank()) null else modelName
             )
-            response.ifBlank { "Não foi possível obter uma resposta do tutor." }
-        } catch (e: java.net.UnknownHostException) {
-            "Sem conexão com a internet. Verifique sua rede."
         } catch (e: Exception) {
-            e.printStackTrace()
-            "Erro ao se comunicar com o tutor AI: ${e.message ?: e::class.simpleName}"
+            throw e.toAIError()
         }
+
+        if (response.isBlank()) {
+            throw AIError.Unknown("Não foi possível obter uma resposta do tutor AI.")
+        }
+        return response
     }
 }

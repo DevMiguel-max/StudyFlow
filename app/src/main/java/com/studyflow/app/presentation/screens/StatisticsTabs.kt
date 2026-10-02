@@ -5,7 +5,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -14,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.studyflow.app.presentation.components.AppCard
+import com.studyflow.app.presentation.components.RechartsVisualDashboard
 import com.studyflow.app.presentation.viewmodel.*
 
 @Composable
@@ -22,6 +22,20 @@ fun GeneralDashboardTab(state: StatisticsState) {
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        item {
+            RechartsVisualDashboard(
+                timeStudiedTodayMinutes = state.timeStudiedToday,
+                timeStudiedWeekMinutes = state.timeStudiedWeek,
+                timeStudiedMonthMinutes = state.timeStudiedMonth,
+                timeStudiedTotalMinutes = state.timeStudiedTotal,
+                dailyGoalMinutes = state.dailyGoalMinutes,
+                dailyGoalProgressPercent = state.dailyGoalProgressPercent,
+                tasksCompletedToday = state.tasksCompletedToday,
+                tasksTotalToday = state.tasksTotalToday,
+                last7DaysHistory = state.last7DaysHistory
+            )
+        }
+
         if (state.insights.isNotEmpty()) {
             item {
                 Text("Insights", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -57,18 +71,6 @@ fun GeneralDashboardTab(state: StatisticsState) {
                     ResumoRow("Dias até a prova", state.daysToExam?.toString() ?: "N/A")
                     ResumoRow("Próximas revisões", "${state.upcomingReviewsCount}")
                     ResumoRow("Próximas tarefas", "${state.upcomingTasksCount}")
-                }
-            }
-        }
-        
-        item {
-            AppCard(modifier = Modifier.fillMaxWidth().padding(top = 16.dp), containerColor = MaterialTheme.colorScheme.primaryContainer) {
-                Column {
-                    Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Exportar Relatório", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                        Icon(Icons.Default.FileDownload, contentDescription = "Exportar", tint = MaterialTheme.colorScheme.onPrimaryContainer)
-                    }
-                    Text("Em breve: Baixe seu histórico e estatísticas em PDF.", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 16.dp, bottom = 16.dp, end = 16.dp), color = MaterialTheme.colorScheme.onPrimaryContainer)
                 }
             }
         }

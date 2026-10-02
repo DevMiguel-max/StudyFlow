@@ -72,8 +72,10 @@ fun EssayResultScreen(
                     Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(48.dp))
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(state.error!!, color = MaterialTheme.colorScheme.error, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = { navController.popBackStack() }) { Text("Voltar") }
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        OutlinedButton(onClick = { navController.popBackStack() }) { Text("Voltar") }
+                        Button(onClick = { viewModel.requestCorrection(submissionId) }) { Text("Tentar novamente") }
+                    }
                 }
             }
         } else if (correction == null) {
