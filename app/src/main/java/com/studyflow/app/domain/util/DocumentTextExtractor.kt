@@ -8,12 +8,26 @@ import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.InputStream
 import java.util.zip.ZipInputStream
+
+data class ExtractedDocument(
+    val fileName: String,
+    val text: String,
+    val truncated: Boolean,
+    val totalPages: Int?,
+    val pagesRead: Int?,
+    val totalChars: Int,
+    val charsKept: Int
+)
 
 object DocumentTextExtractor {
     
-    private const val MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024L // 15 MB
-    private const val MAX_EXTRACTED_CHARS = 50_000
+    private const val MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024L // 25 MB
+    const val MAX_CHUNKS = 6
+    const val CHUNK_SIZE = 25_000
+    const val MAX_TOTAL_CHARS = MAX_CHUNKS * CHUNK_SIZE // 150.000 caracteres
+    const val MAX_PAGES_TO_READ = 40
 
     fun init(context: Context) {
         try {
@@ -23,7 +37,56 @@ object DocumentTextExtractor {
         }
     }
 
-    suspend fun extractText(context: Context, uri: Uri): Pair<String, String> = withContext(Dispatchers.IO) {
+    fun validateFormat(fileName: String, mimeType: String?) {
+        val lowerMime = mimeType?.lowercase()
+        val isPdf = fileName.endsWith(".pdf", ignoreCase = true) || lowerMime == "application/pdf"
+        val isDocx = fileName.endsWith(".docx", ignoreCase = true) || lowerMime == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        val isTxt = fileName.endsWith(".txt", ignoreCase = true) || lowerMime == "text/plain"
+        val isMd = fileName.endsWith(".md", ignoreCase = true) || lowerMime == "text/markdown" || lowerMime == "text/x-markdown"
+
+        if (!isPdf && !isDocx && !isTxt && !isMd) {
+            throw IllegalArgumentException("Formato não suportado. Use PDF, DOCX, TXT ou MD.")
+        }
+    }
+
+    fun validateContent(rawText: String) {
+        if (isBinaryContent(rawText)) {
+            throw IllegalArgumentException("Arquivo inválido ou binário. O conteúdo de texto contém caracteres não legíveis.")
+        }
+
+        if (rawText.isBlank() || rawText.trim().length < 30) {
+            throw IllegalArgumentException("PDF escaneado ou vazio: nenhuma camada de texto pesquisável foi encontrada no documento.")
+        }
+    }
+
+    fun processExtractedText(
+        rawText: String,
+        totalPages: Int?,
+        pagesRead: Int?,
+        fileName: String
+    ): ExtractedDocument {
+        validateContent(rawText)
+
+        val totalChars = rawText.length
+        val truncatedByChars = totalChars > MAX_TOTAL_CHARS
+        val truncatedByPages = totalPages != null && pagesRead != null && pagesRead < totalPages
+        val isTruncated = truncatedByChars || truncatedByPages
+
+        val finalText = if (truncatedByChars) rawText.take(MAX_TOTAL_CHARS) else rawText
+        val charsKept = finalText.length
+
+        return ExtractedDocument(
+            fileName = fileName,
+            text = finalText,
+            truncated = isTruncated,
+            totalPages = totalPages,
+            pagesRead = pagesRead,
+            totalChars = totalChars,
+            charsKept = charsKept
+        )
+    }
+
+    suspend fun extractText(context: Context, uri: Uri): ExtractedDocument = withContext(Dispatchers.IO) {
         var fileName = "documento"
         var fileSize = -1L
 
@@ -41,81 +104,96 @@ object DocumentTextExtractor {
         }
 
         if (fileSize > MAX_FILE_SIZE_BYTES) {
-            throw IllegalArgumentException("O arquivo selecionado excede o limite máximo permitido de 15MB.")
+            throw IllegalArgumentException("O arquivo selecionado excede o limite máximo permitido de 25MB.")
         }
 
-        val text = when {
-            fileName.endsWith(".pdf", ignoreCase = true) -> extractPdf(context, uri)
-            fileName.endsWith(".docx", ignoreCase = true) -> extractDocx(context, uri)
-            fileName.endsWith(".txt", ignoreCase = true) || fileName.endsWith(".md", ignoreCase = true) -> extractTxt(context, uri)
-            else -> extractTxt(context, uri) // Fallback
+        val mimeType = try {
+            context.contentResolver.getType(uri)?.lowercase()
+        } catch (e: Exception) {
+            null
         }
 
-        if (text.isBlank() || text.trim().length < 30) {
-            throw IllegalArgumentException("O documento está vazio ou é um arquivo escaneado sem texto selecionável. Por favor, forneça um PDF com camada de texto digitalizada.")
+        validateFormat(fileName, mimeType)
+
+        val isPdf = fileName.endsWith(".pdf", ignoreCase = true) || mimeType == "application/pdf"
+        val isDocx = fileName.endsWith(".docx", ignoreCase = true) || mimeType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        val isTxt = fileName.endsWith(".txt", ignoreCase = true) || mimeType == "text/plain"
+        val isMd = fileName.endsWith(".md", ignoreCase = true) || mimeType == "text/markdown" || mimeType == "text/x-markdown"
+
+        val (rawText, totalPages, pagesRead) = when {
+            isPdf -> extractPdfWithPages(context, uri)
+            isDocx -> Triple(extractDocx(context, uri), null, null)
+            isTxt || isMd -> Triple(extractTxt(context, uri), null, null)
+            else -> throw IllegalArgumentException("Formato não suportado. Use PDF, DOCX, TXT ou MD.")
         }
 
-        Pair(fileName, text.take(MAX_EXTRACTED_CHARS))
+        processExtractedText(rawText, totalPages, pagesRead, fileName)
     }
 
-    private fun extractPdf(context: Context, uri: Uri): String {
-        return try {
-            context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                PDDocument.load(inputStream).use { document ->
-                    if (document.numberOfPages == 0) {
-                        throw IllegalArgumentException("O PDF não contém páginas.")
-                    }
-                    val stripper = PDFTextStripper()
-                    // Limitar a extração às primeiras 40 páginas para não sobrecarregar
-                    stripper.startPage = 1
-                    stripper.endPage = document.numberOfPages.coerceAtMost(40)
-                    val extracted = stripper.getText(document) ?: ""
-                    if (extracted.trim().length < 30) {
-                        throw IllegalArgumentException("PDF escaneado ou vazio: nenhuma camada de texto pesquisável foi encontrada no documento.")
-                    }
-                    extracted
+    private fun extractPdfWithPages(context: Context, uri: Uri): Triple<String, Int, Int> {
+        val inputStream: InputStream = context.contentResolver.openInputStream(uri)
+            ?: throw IllegalArgumentException("Não foi possível abrir o fluxo de leitura do PDF.")
+
+        return inputStream.use { stream ->
+            PDDocument.load(stream).use { document ->
+                val totalPages = document.numberOfPages
+                if (totalPages == 0) {
+                    throw IllegalArgumentException("O PDF não contém páginas.")
                 }
-            } ?: throw IllegalArgumentException("Não foi possível abrir o fluxo de leitura do PDF.")
-        } catch (e: IllegalArgumentException) {
-            throw e
-        } catch (e: Exception) {
-            e.printStackTrace()
-            throw IllegalArgumentException("Falha ao ler o PDF: ${e.localizedMessage ?: e.javaClass.simpleName}")
+
+                val pagesToRead = totalPages.coerceAtMost(MAX_PAGES_TO_READ)
+                val stripper = PDFTextStripper()
+                stripper.startPage = 1
+                stripper.endPage = pagesToRead
+
+                val extracted = stripper.getText(document) ?: ""
+                Triple(extracted, totalPages, pagesToRead)
+            }
         }
     }
 
     private fun extractDocx(context: Context, uri: Uri): String {
-        return try {
+        val inputStream: InputStream = context.contentResolver.openInputStream(uri)
+            ?: throw IllegalArgumentException("Não foi possível abrir o fluxo do arquivo DOCX.")
+
+        return inputStream.use { stream ->
             val stringBuilder = StringBuilder()
-            context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                val zipInputStream = ZipInputStream(inputStream)
-                var entry = zipInputStream.nextEntry
-                while (entry != null) {
-                    if (entry.name == "word/document.xml") {
-                        val buffer = ByteArray(2048)
-                        var length: Int
-                        while (zipInputStream.read(buffer).also { length = it } > 0) {
-                            stringBuilder.append(String(buffer, 0, length))
-                        }
+            val zipInputStream = ZipInputStream(stream)
+            var entry = zipInputStream.nextEntry
+            while (entry != null) {
+                if (entry.name == "word/document.xml") {
+                    val buffer = ByteArray(2048)
+                    var length: Int
+                    while (zipInputStream.read(buffer).also { length = it } > 0) {
+                        stringBuilder.append(String(buffer, 0, length))
                     }
-                    zipInputStream.closeEntry()
-                    entry = zipInputStream.nextEntry
                 }
+                zipInputStream.closeEntry()
+                entry = zipInputStream.nextEntry
             }
             val xmlText = stringBuilder.toString()
             xmlText.replace(Regex("<[^>]+>"), " ").replace(Regex("\\s+"), " ").trim()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            throw IllegalArgumentException("Erro ao extrair texto do DOCX: ${e.message}")
         }
     }
 
     private fun extractTxt(context: Context, uri: Uri): String {
-        return try {
-            context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } ?: ""
-        } catch (e: Exception) {
-            e.printStackTrace()
-            throw IllegalArgumentException("Erro ao ler arquivo de texto: ${e.message}")
+        val inputStream: InputStream = context.contentResolver.openInputStream(uri)
+            ?: throw IllegalArgumentException("Não foi possível abrir o fluxo do arquivo de texto.")
+
+        return inputStream.use { stream ->
+            stream.bufferedReader().readText()
         }
+    }
+
+    fun isBinaryContent(text: String): Boolean {
+        if (text.contains('\u0000')) return true
+        var controlChars = 0
+        val sample = text.take(2000)
+        for (ch in sample) {
+            if (ch.isISOControl() && ch != '\n' && ch != '\r' && ch != '\t') {
+                controlChars++
+            }
+        }
+        return sample.isNotEmpty() && (controlChars.toDouble() / sample.length > 0.05)
     }
 }

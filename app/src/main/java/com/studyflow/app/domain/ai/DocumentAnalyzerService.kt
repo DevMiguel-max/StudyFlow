@@ -53,12 +53,79 @@ class DocumentAnalyzerService(
         }
     }
 
-    suspend fun analyzeEditalProgram(text: String): EditalProgramResult {
-        val cacheKey = "edital_program_${text.hashCode()}"
-        return AIHelper.withRetryAndTelemetry("analyzeEditalProgram", cacheKey = cacheKey) {
+    suspend fun analyzeEditalProgram(text: String): Pair<EditalProgramResult, Boolean> {
+        val maxChunks = 6
+        val chunkSize = 25_000
+        val totalLength = text.length
+        val isTruncated = totalLength > maxChunks * chunkSize
+        val chunks = text.chunked(chunkSize).take(maxChunks)
+
+        val results = mutableListOf<EditalProgramResult>()
+        for (chunk in chunks) {
+            try {
+                val chunkResult = analyzeSingleEditalChunk(chunk)
+                if (chunkResult.disciplinas.isNotEmpty()) {
+                    results.add(chunkResult)
+                }
+            } catch (e: Exception) {
+                // Se algum bloco falhar, continua com os blocos restantes
+            }
+        }
+
+        if (results.isEmpty()) {
+            throw AIError.Unknown("O edital analisado não possui disciplinas ou conteúdo programático identificáveis.")
+        }
+
+        val firstCargo = results.map { it.cargo }.firstOrNull { it.isNotBlank() } ?: ""
+        val firstBanca = results.map { it.banca }.firstOrNull { it.isNotBlank() } ?: ""
+
+        val mergedDisciplinas = mutableListOf<EditalSubjectInfo>()
+        val seenDisciplinas = mutableMapOf<String, EditalSubjectInfo>()
+
+        for (res in results) {
+            for (disc in res.disciplinas) {
+                val key = disc.nome.trim().lowercase()
+                if (key.isBlank()) continue
+                val existing = seenDisciplinas[key]
+                if (existing == null) {
+                    seenDisciplinas[key] = disc
+                    mergedDisciplinas.add(disc)
+                } else {
+                    val combinedSubjects = (existing.assuntos + disc.assuntos)
+                        .distinctBy { it.trim().lowercase() }
+                    val combinedContent = when {
+                        existing.conteudoProgramatico.isBlank() -> disc.conteudoProgramatico
+                        disc.conteudoProgramatico.isBlank() -> existing.conteudoProgramatico
+                        existing.conteudoProgramatico == disc.conteudoProgramatico -> existing.conteudoProgramatico
+                        else -> "${existing.conteudoProgramatico}\n${disc.conteudoProgramatico}"
+                    }
+                    val updated = existing.copy(
+                        conteudoProgramatico = combinedContent,
+                        assuntos = combinedSubjects
+                    )
+                    seenDisciplinas[key] = updated
+                    val idx = mergedDisciplinas.indexOfFirst { it.nome.trim().lowercase() == key }
+                    if (idx != -1) {
+                        mergedDisciplinas[idx] = updated
+                    }
+                }
+            }
+        }
+
+        val finalResult = EditalProgramResult(
+            cargo = firstCargo,
+            banca = firstBanca,
+            disciplinas = mergedDisciplinas
+        )
+        return Pair(finalResult, isTruncated)
+    }
+
+    private suspend fun analyzeSingleEditalChunk(chunk: String): EditalProgramResult {
+        val cacheKey = "edital_chunk_${chunk.hashCode()}"
+        return AIHelper.withRetryAndTelemetry("analyzeSingleEditalChunk", cacheKey = cacheKey) {
             val systemPrompt = """
                 Você é um especialista em análise de editais de concursos e vestibulares.
-                Analise o texto do edital e extraia as disciplinas, o conteúdo programático de cada uma e a lista detalhada de assuntos/tópicos.
+                Analise o trecho do edital e extraia as disciplinas, o conteúdo programático de cada uma e a lista detalhada de assuntos/tópicos.
                 
                 Retorne ESTRITAMENTE um objeto JSON válido (sem marcadores markdown ```json) no seguinte formato:
                 {
@@ -80,7 +147,7 @@ class DocumentAnalyzerService(
 
             val responseText = try {
                 geminiClient.generateText(
-                    prompt = "Conteúdo do Edital:\n${text.take(30000)}",
+                    prompt = "Conteúdo do Edital:\n$chunk",
                     systemInstruction = systemPrompt,
                     temperature = 0.2f
                 )
@@ -89,7 +156,7 @@ class DocumentAnalyzerService(
             }
 
             if (responseText.isBlank()) {
-                throw AIError.Unknown("A IA retornou uma resposta vazia ao analisar o edital.")
+                return@withRetryAndTelemetry EditalProgramResult()
             }
 
             var cleanJson = responseText.replace("```json", "").replace("```", "").trim()
@@ -99,18 +166,11 @@ class DocumentAnalyzerService(
                 cleanJson = cleanJson.substring(startIdx, endIdx + 1)
             }
 
-            val parsed = try {
+            try {
                 json.decodeFromString<EditalProgramResult>(cleanJson)
             } catch (e: Exception) {
-                throw AIError.Unknown("Falha na interpretação estruturada do edital retornado pela IA.", e)
+                EditalProgramResult()
             }
-
-            // Validação estrita do JSON retornado antes de salvar
-            if (parsed.disciplinas.isEmpty() || parsed.disciplinas.all { it.nome.isBlank() }) {
-                throw AIError.Unknown("O edital analisado não possui disciplinas ou conteúdo programático identificáveis.")
-            }
-
-            parsed
         }
     }
 

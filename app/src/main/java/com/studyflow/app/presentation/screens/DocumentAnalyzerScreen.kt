@@ -54,7 +54,8 @@ fun DocumentAnalyzerScreen(
                 viewModel.generateSummary(state.currentDocument!!.id, type)
             },
             isProcessing = state.isProcessing,
-            progressMessage = state.progressMessage
+            progressMessage = state.progressMessage,
+            truncationWarning = state.truncationWarning
         )
     } else {
         Scaffold(
@@ -192,10 +193,17 @@ fun DocumentDetailScreen(
     onDelete: () -> Unit,
     onGenerateSummary: (String) -> Unit,
     isProcessing: Boolean,
-    progressMessage: String
+    progressMessage: String,
+    truncationWarning: String? = null
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("Análise", "Resumo", "Plano")
+
+    val warningText = truncationWarning ?: run {
+        document.analysisResult?.lines()?.firstOrNull { 
+            it.contains("Foram analisadas") || it.contains("Foram analisados") 
+        }?.removePrefix("> ⚠️ **Aviso:** ")?.removePrefix("> ")
+    }
 
     Scaffold(
         topBar = {
@@ -246,6 +254,29 @@ fun DocumentDetailScreen(
                     item {
                         when (selectedTab) {
                             0 -> {
+                                if (warningText != null) {
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(12.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Warning,
+                                                contentDescription = "Aviso de truncamento",
+                                                tint = MaterialTheme.colorScheme.onErrorContainer
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = warningText,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onErrorContainer
+                                            )
+                                        }
+                                    }
+                                }
                                 Text("Análise da IA", style = MaterialTheme.typography.titleLarge)
                                 Spacer(modifier = Modifier.height(8.dp))
                                 MarkdownText(markdown = document.analysisResult ?: "Nenhuma análise disponível.")

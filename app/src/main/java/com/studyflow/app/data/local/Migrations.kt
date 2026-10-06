@@ -66,10 +66,9 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
 
 val MIGRATION_6_7 = object : Migration(6, 7) {
     override fun migrate(database: SupportSQLiteDatabase) {
-        // Drop and recreate achievements table with new schema
-        database.execSQL("DROP TABLE IF EXISTS `achievements`")
+        // Preservar conquistas do usuário migrando os dados da tabela legada
         database.execSQL("""
-            CREATE TABLE IF NOT EXISTS `achievements` (
+            CREATE TABLE IF NOT EXISTS `achievements_new` (
                 `id` TEXT NOT NULL, 
                 `title` TEXT NOT NULL, 
                 `description` TEXT NOT NULL, 
@@ -83,6 +82,34 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
                 PRIMARY KEY(`id`)
             )
         """)
+
+        val cursor = database.query("PRAGMA table_info(`achievements`)")
+        val columns = mutableListOf<String>()
+        while (cursor.moveToNext()) {
+            val nameIndex = cursor.getColumnIndex("name")
+            if (nameIndex != -1) columns.add(cursor.getString(nameIndex))
+        }
+        cursor.close()
+
+        if (columns.isNotEmpty()) {
+            val titleCol = if (columns.contains("title")) "title" else if (columns.contains("name")) "name" else "'Conquista'"
+            val descCol = if (columns.contains("description")) "description" else "''"
+            val iconCol = if (columns.contains("icon")) "icon" else "'🏆'"
+            val tierCol = if (columns.contains("tier")) "tier" else "'Bronze'"
+            val catCol = if (columns.contains("category")) "category" else "'Geral'"
+            val progCol = if (columns.contains("progress")) "progress" else "0"
+            val maxProgCol = if (columns.contains("maxProgress")) "maxProgress" else "1"
+            val unlCol = if (columns.contains("isUnlocked")) "isUnlocked" else "0"
+            val unlAtCol = if (columns.contains("unlockedAt")) "unlockedAt" else "NULL"
+
+            database.execSQL("""
+                INSERT INTO `achievements_new` (`id`, `title`, `description`, `icon`, `tier`, `category`, `progress`, `maxProgress`, `isUnlocked`, `unlockedAt`)
+                SELECT CAST(id AS TEXT), $titleCol, $descCol, $iconCol, $tierCol, $catCol, $progCol, $maxProgCol, $unlCol, $unlAtCol
+                FROM `achievements`
+            """)
+            database.execSQL("DROP TABLE `achievements`")
+        }
+        database.execSQL("ALTER TABLE `achievements_new` RENAME TO `achievements`")
 
         // Add new columns to user_profile
         database.execSQL("ALTER TABLE `user_profile` ADD COLUMN `streakDays` INTEGER NOT NULL DEFAULT 0")
@@ -160,10 +187,9 @@ val MIGRATION_8_9 = object : Migration(8, 9) {
 
 val MIGRATION_9_10 = object : Migration(9, 10) {
     override fun migrate(database: SupportSQLiteDatabase) {
-        // Recreate essay_corrections table with new fields
-        database.execSQL("DROP TABLE IF EXISTS `essay_corrections`")
+        // Preservar redações corrigidas migrando dados da tabela antiga para o schema v10
         database.execSQL("""
-            CREATE TABLE IF NOT EXISTS `essay_corrections` (
+            CREATE TABLE IF NOT EXISTS `essay_corrections_new` (
                 `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
                 `submissionId` INTEGER NOT NULL, 
                 `comp1` INTEGER NOT NULL, 
@@ -176,16 +202,52 @@ val MIGRATION_9_10 = object : Migration(9, 10) {
                 `weaknesses` TEXT NOT NULL, 
                 `suggestions` TEXT NOT NULL, 
                 `date` INTEGER NOT NULL, 
-                `generalComment` TEXT NOT NULL DEFAULT '', 
-                `essayLevel` TEXT NOT NULL DEFAULT '', 
-                `performanceEstimate` TEXT NOT NULL DEFAULT '', 
-                `revisedVersion` TEXT NOT NULL DEFAULT '', 
-                `detailedAnalysisJson` TEXT NOT NULL DEFAULT '', 
-                `competenciesDetailsJson` TEXT NOT NULL DEFAULT '', 
-                `modelUsed` TEXT NOT NULL DEFAULT 'meta/llama3-70b-instruct', 
-                `isDetailed` INTEGER NOT NULL DEFAULT 1
+                `generalComment` TEXT NOT NULL, 
+                `essayLevel` TEXT NOT NULL, 
+                `performanceEstimate` TEXT NOT NULL, 
+                `revisedVersion` TEXT NOT NULL, 
+                `detailedAnalysisJson` TEXT NOT NULL, 
+                `competenciesDetailsJson` TEXT NOT NULL, 
+                `modelUsed` TEXT NOT NULL, 
+                `isDetailed` INTEGER NOT NULL
             )
         """)
+
+        val cursor = database.query("PRAGMA table_info(`essay_corrections`)")
+        val columns = mutableListOf<String>()
+        while (cursor.moveToNext()) {
+            val nameIndex = cursor.getColumnIndex("name")
+            if (nameIndex != -1) columns.add(cursor.getString(nameIndex))
+        }
+        cursor.close()
+
+        if (columns.isNotEmpty()) {
+            val genCommentCol = if (columns.contains("generalComment")) "generalComment" else "''"
+            val essayLvlCol = if (columns.contains("essayLevel")) "essayLevel" else "''"
+            val perfEstCol = if (columns.contains("performanceEstimate")) "performanceEstimate" else "''"
+            val revVerCol = if (columns.contains("revisedVersion")) "revisedVersion" else "''"
+            val detAnalCol = if (columns.contains("detailedAnalysisJson")) "detailedAnalysisJson" else "''"
+            val compDetCol = if (columns.contains("competenciesDetailsJson")) "competenciesDetailsJson" else "''"
+            val modelCol = if (columns.contains("modelUsed")) "modelUsed" else "'gemini-2.5-flash'"
+            val isDetCol = if (columns.contains("isDetailed")) "isDetailed" else "1"
+
+            database.execSQL("""
+                INSERT INTO `essay_corrections_new` (
+                    `id`, `submissionId`, `comp1`, `comp2`, `comp3`, `comp4`, `comp5`, `totalScore`,
+                    `strengths`, `weaknesses`, `suggestions`, `date`,
+                    `generalComment`, `essayLevel`, `performanceEstimate`, `revisedVersion`,
+                    `detailedAnalysisJson`, `competenciesDetailsJson`, `modelUsed`, `isDetailed`
+                )
+                SELECT 
+                    `id`, `submissionId`, `comp1`, `comp2`, `comp3`, `comp4`, `comp5`, `totalScore`,
+                    `strengths`, `weaknesses`, `suggestions`, `date`,
+                    $genCommentCol, $essayLvlCol, $perfEstCol, $revVerCol,
+                    $detAnalCol, $compDetCol, $modelCol, $isDetCol
+                FROM `essay_corrections`
+            """)
+            database.execSQL("DROP TABLE `essay_corrections`")
+        }
+        database.execSQL("ALTER TABLE `essay_corrections_new` RENAME TO `essay_corrections`")
     }
 }
 

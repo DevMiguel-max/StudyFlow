@@ -18,7 +18,9 @@ data class DocumentAnalyzerState(
     val isProcessing: Boolean = false,
     val progressMessage: String = "",
     val currentDocument: AnalyzedDocument? = null,
-    val error: String? = null
+    val error: String? = null,
+    val isTruncated: Boolean = false,
+    val truncationWarning: String? = null
 )
 
 class DocumentAnalyzerViewModel(
@@ -36,8 +38,10 @@ class DocumentAnalyzerViewModel(
         viewModelScope.launch {
             _state.value = _state.value.copy(isProcessing = true, progressMessage = "Extraindo texto do documento...", error = null)
             try {
-                // 1. Extração
-                val (fileName, textContent) = DocumentTextExtractor.extractText(context, uri)
+                // 1. Extração com ExtractedDocument
+                val extracted = DocumentTextExtractor.extractText(context, uri)
+                val fileName = extracted.fileName
+                val textContent = extracted.text
                 
                 if (textContent.isBlank()) {
                     _state.value = _state.value.copy(isProcessing = false, error = "Arquivo vazio ou não foi possível extrair o texto.")
@@ -52,8 +56,10 @@ class DocumentAnalyzerViewModel(
 
                 // 3. Análise principal
                 _state.value = _state.value.copy(progressMessage = "Realizando análise estruturada por IA...")
-                val analysisResult = if (type == "EDITAL") {
-                    val editalData = service.analyzeEditalProgram(textContent)
+                var isTruncated = extracted.truncated
+                val rawAnalysis = if (type == "EDITAL") {
+                    val (editalData, chunkTruncated) = service.analyzeEditalProgram(textContent)
+                    if (chunkTruncated) isTruncated = true
                     buildString {
                         append("# ${editalData.cargo.ifBlank { "Edital" }}\n\n")
                         if (editalData.banca.isNotBlank()) append("**Banca:** ${editalData.banca}\n\n")
@@ -76,7 +82,23 @@ class DocumentAnalyzerViewModel(
                     service.analyzeDocument(textContent, "ANALYSIS")
                 }
 
-                // 4. Salvar documento original
+                val warningMessage = if (isTruncated) {
+                    if (extracted.totalPages != null && extracted.pagesRead != null) {
+                        "Foram analisadas ${extracted.pagesRead} de ${extracted.totalPages} páginas — o resultado pode estar incompleto"
+                    } else {
+                        "Foram analisados ${extracted.charsKept} de ${extracted.totalChars} caracteres — o resultado pode estar incompleto"
+                    }
+                } else {
+                    null
+                }
+
+                val analysisResult = if (warningMessage != null) {
+                    "> ⚠️ **Aviso:** $warningMessage\n\n$rawAnalysis"
+                } else {
+                    rawAnalysis
+                }
+
+                // 4. Salvar documento original com aviso
                 val document = AnalyzedDocument(
                     title = fileName,
                     originalUri = uri.toString(),
@@ -88,7 +110,12 @@ class DocumentAnalyzerViewModel(
                 val id = repository.insertDocument(document)
                 val savedDocument = repository.getDocumentById(id.toInt())
                 
-                _state.value = _state.value.copy(isProcessing = false, currentDocument = savedDocument)
+                _state.value = _state.value.copy(
+                    isProcessing = false, 
+                    currentDocument = savedDocument,
+                    isTruncated = isTruncated,
+                    truncationWarning = warningMessage
+                )
 
             } catch (e: Exception) {
                 e.printStackTrace()

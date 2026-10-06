@@ -61,8 +61,24 @@ android {
     getByName("test") {
       assets.srcDirs(files("$projectDir/schemas"))
     }
+    getByName("androidTest") {
+      assets.srcDirs(files("$projectDir/schemas"))
+    }
   }
-  testOptions { unitTests { isIncludeAndroidResources = true } }
+  testOptions {
+    unitTests {
+      isIncludeAndroidResources = true
+    }
+  }
+}
+
+tasks.withType<Test>().configureEach {
+  doFirst {
+    val agentJar = classpath.files.firstOrNull { it.name.startsWith("byte-buddy-agent") }
+    if (agentJar != null) {
+      jvmArgs("-javaagent:${agentJar.absolutePath}")
+    }
+  }
 }
 
 ksp {
@@ -146,6 +162,7 @@ dependencies {
   androidTestImplementation(libs.androidx.espresso.core)
   androidTestImplementation(libs.androidx.junit)
   androidTestImplementation(libs.androidx.runner)
+  androidTestImplementation(libs.androidx.room.testing)
   debugImplementation(libs.androidx.compose.ui.test.manifest)
   debugImplementation(libs.androidx.compose.ui.tooling)
   debugImplementation(libs.firebase.appcheck.debug)
