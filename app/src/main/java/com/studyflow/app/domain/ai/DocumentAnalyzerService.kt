@@ -1,5 +1,6 @@
 package com.studyflow.app.domain.ai
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -15,6 +16,13 @@ data class EditalProgramResult(
     val cargo: String = "",
     val banca: String = "",
     val disciplinas: List<EditalSubjectInfo> = emptyList()
+)
+
+data class EditalProgramAnalysisResult(
+    val result: EditalProgramResult,
+    val isTruncated: Boolean,
+    val failedChunks: Int,
+    val totalChunks: Int
 )
 
 class DocumentAnalyzerService(
@@ -53,26 +61,42 @@ class DocumentAnalyzerService(
         }
     }
 
-    suspend fun analyzeEditalProgram(text: String): Pair<EditalProgramResult, Boolean> {
+    suspend fun analyzeEditalProgram(text: String): EditalProgramAnalysisResult {
         val maxChunks = 6
         val chunkSize = 25_000
         val totalLength = text.length
         val isTruncated = totalLength > maxChunks * chunkSize
         val chunks = text.chunked(chunkSize).take(maxChunks)
+        val totalChunks = chunks.size
 
         val results = mutableListOf<EditalProgramResult>()
+        var failedChunks = 0
+        var firstError: Throwable? = null
+
         for (chunk in chunks) {
             try {
                 val chunkResult = analyzeSingleEditalChunk(chunk)
                 if (chunkResult.disciplinas.isNotEmpty()) {
                     results.add(chunkResult)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                // Se algum bloco falhar, continua com os blocos restantes
+                failedChunks++
+                if (firstError == null) {
+                    firstError = e
+                }
             }
         }
 
         if (results.isEmpty()) {
+            if (firstError != null) {
+                if (firstError is AIError) {
+                    throw firstError
+                } else {
+                    throw firstError.toAIError()
+                }
+            }
             throw AIError.Unknown("O edital analisado não possui disciplinas ou conteúdo programático identificáveis.")
         }
 
@@ -117,12 +141,17 @@ class DocumentAnalyzerService(
             banca = firstBanca,
             disciplinas = mergedDisciplinas
         )
-        return Pair(finalResult, isTruncated)
+        return EditalProgramAnalysisResult(
+            result = finalResult,
+            isTruncated = isTruncated,
+            failedChunks = failedChunks,
+            totalChunks = totalChunks
+        )
     }
 
     private suspend fun analyzeSingleEditalChunk(chunk: String): EditalProgramResult {
         val cacheKey = "edital_chunk_${chunk.hashCode()}"
-        return AIHelper.withRetryAndTelemetry("analyzeSingleEditalChunk", cacheKey = cacheKey) {
+        return AIHelper.withRetryAndTelemetry("analyzeSingleEditalChunk", maxRetries = 1, cacheKey = cacheKey) {
             val systemPrompt = """
                 Você é um especialista em análise de editais de concursos e vestibulares.
                 Analise o trecho do edital e extraia as disciplinas, o conteúdo programático de cada uma e a lista detalhada de assuntos/tópicos.
@@ -151,12 +180,14 @@ class DocumentAnalyzerService(
                     systemInstruction = systemPrompt,
                     temperature = 0.2f
                 )
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 throw e.toAIError()
             }
 
             if (responseText.isBlank()) {
-                return@withRetryAndTelemetry EditalProgramResult()
+                throw AIError.Unknown("Resposta vazia da IA ao analisar trecho do edital.")
             }
 
             var cleanJson = responseText.replace("```json", "").replace("```", "").trim()
@@ -169,7 +200,7 @@ class DocumentAnalyzerService(
             try {
                 json.decodeFromString<EditalProgramResult>(cleanJson)
             } catch (e: Exception) {
-                EditalProgramResult()
+                throw AIError.Unknown("Falha ao interpretar resposta estruturada do edital.", e)
             }
         }
     }

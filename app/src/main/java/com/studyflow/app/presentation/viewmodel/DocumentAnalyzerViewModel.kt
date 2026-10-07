@@ -57,9 +57,15 @@ class DocumentAnalyzerViewModel(
                 // 3. Análise principal
                 _state.value = _state.value.copy(progressMessage = "Realizando análise estruturada por IA...")
                 var isTruncated = extracted.truncated
+                var failedChunksCount = 0
+                var totalChunksCount = 0
                 val rawAnalysis = if (type == "EDITAL") {
-                    val (editalData, chunkTruncated) = service.analyzeEditalProgram(textContent)
-                    if (chunkTruncated) isTruncated = true
+                    val analysisResult = service.analyzeEditalProgram(textContent)
+                    val editalData = analysisResult.result
+                    if (analysisResult.isTruncated) isTruncated = true
+                    failedChunksCount = analysisResult.failedChunks
+                    totalChunksCount = analysisResult.totalChunks
+
                     buildString {
                         append("# ${editalData.cargo.ifBlank { "Edital" }}\n\n")
                         if (editalData.banca.isNotBlank()) append("**Banca:** ${editalData.banca}\n\n")
@@ -82,14 +88,16 @@ class DocumentAnalyzerViewModel(
                     service.analyzeDocument(textContent, "ANALYSIS")
                 }
 
-                val warningMessage = if (isTruncated) {
-                    if (extracted.totalPages != null && extracted.pagesRead != null) {
-                        "Foram analisadas ${extracted.pagesRead} de ${extracted.totalPages} páginas — o resultado pode estar incompleto"
-                    } else {
-                        "Foram analisados ${extracted.charsKept} de ${extracted.totalChars} caracteres — o resultado pode estar incompleto"
+                val warningMessage = when {
+                    failedChunksCount > 0 -> "$failedChunksCount de $totalChunksCount blocos não puderam ser analisados — o resultado está incompleto"
+                    isTruncated -> {
+                        if (extracted.totalPages != null && extracted.pagesRead != null) {
+                            "Foram analisadas ${extracted.pagesRead} de ${extracted.totalPages} páginas — o resultado pode estar incompleto"
+                        } else {
+                            "Foram analisados ${extracted.charsKept} de ${extracted.totalChars} caracteres — o resultado pode estar incompleto"
+                        }
                     }
-                } else {
-                    null
+                    else -> null
                 }
 
                 val analysisResult = if (warningMessage != null) {
@@ -113,7 +121,7 @@ class DocumentAnalyzerViewModel(
                 _state.value = _state.value.copy(
                     isProcessing = false, 
                     currentDocument = savedDocument,
-                    isTruncated = isTruncated,
+                    isTruncated = isTruncated || failedChunksCount > 0,
                     truncationWarning = warningMessage
                 )
 

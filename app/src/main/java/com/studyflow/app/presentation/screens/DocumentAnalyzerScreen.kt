@@ -201,7 +201,7 @@ fun DocumentDetailScreen(
 
     val warningText = truncationWarning ?: run {
         document.analysisResult?.lines()?.firstOrNull { 
-            it.contains("Foram analisadas") || it.contains("Foram analisados") 
+            it.contains("Foram analisadas") || it.contains("Foram analisados") || it.contains("não puderam ser analisados")
         }?.removePrefix("> ⚠️ **Aviso:** ")?.removePrefix("> ")
     }
 

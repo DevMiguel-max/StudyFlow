@@ -11,11 +11,15 @@ object AIHelper {
         crossinline block: suspend () -> T
     ): T {
         if (cacheKey != null) {
-            val cached = AICacheManager.get(cacheKey)
-            if (cached != null) {
-                if (T::class == String::class) {
-                    return cached as T
+            try {
+                val cached = AICacheManager.get(cacheKey)
+                if (cached != null) {
+                    if (T::class == String::class) {
+                        return cached as T
+                    }
                 }
+            } catch (ignored: Throwable) {
+                // Ignore cache access issues when running outside full app context (e.g. unit tests)
             }
         }
         
@@ -28,10 +32,16 @@ object AIHelper {
                 AITelemetry.logRequest(latency, true, currentAttempt > 0, estimatedTokens)
                 
                 if (cacheKey != null && result is String) {
-                    AICacheManager.put(cacheKey, result)
+                    try {
+                        AICacheManager.put(cacheKey, result)
+                    } catch (ignored: Throwable) {
+                        // Ignore cache write issues
+                    }
                 }
                 
                 return result
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 currentAttempt++
                 if (currentAttempt >= maxRetries) {

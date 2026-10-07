@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Email
@@ -21,18 +20,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.studyflow.app.R
 import com.studyflow.app.presentation.viewmodel.AuthViewModel
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,9 +41,6 @@ fun LoginScreen(
 
     val state by viewModel.state.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val webClientId = stringResource(R.string.default_web_client_id)
 
     val isEmailValid = email.isNotEmpty() && Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
     val emailError = if (email.isNotEmpty() && !isEmailValid) "E-mail inválido" else null
@@ -63,15 +54,6 @@ fun LoginScreen(
         if (currentUser != null) {
             navController.navigate("home") {
                 popUpTo("login") { inclusive = true }
-            }
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        if (currentUser == null) {
-            val token = attemptSilentSignIn(context, webClientId)
-            if (token != null) {
-                viewModel.signInWithGoogle(token)
             }
         }
     }
@@ -176,54 +158,6 @@ fun LoginScreen(
                 Text("Entrar", style = MaterialTheme.typography.titleMedium)
             }
 
-            // 4) Separador "ou"
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f),
-                    color = MaterialTheme.colorScheme.outlineVariant
-                )
-                Text(
-                    text = "ou",
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f),
-                    color = MaterialTheme.colorScheme.outlineVariant
-                )
-            }
-
-            // 5) Botão "Entrar com o Google" (OutlinedButton)
-            OutlinedButton(
-                onClick = {
-                    coroutineScope.launch {
-                        val idToken = signInWithGoogle(context, webClientId)
-                        if (idToken != null) {
-                            viewModel.signInWithGoogle(idToken)
-                        }
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .testTag("google_sign_in_button"),
-                shape = RoundedCornerShape(16.dp),
-                enabled = !state.isLoading
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "Google Icon",
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text("Entrar com o Google", style = MaterialTheme.typography.titleMedium)
-            }
-
             Spacer(modifier = Modifier.height(20.dp))
 
             // 6) Links "Criar conta" e "Esqueci a senha"
@@ -278,9 +212,6 @@ fun SignUpScreen(
 
     val state by viewModel.state.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val webClientId = stringResource(R.string.default_web_client_id)
 
     val isEmailValid = email.isNotEmpty() && Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
     val emailError = if (email.isNotEmpty() && !isEmailValid) "E-mail inválido" else null
@@ -428,54 +359,6 @@ fun SignUpScreen(
                 enabled = isSignUpFormValid && !state.isLoading
             ) {
                 Text("Cadastrar", style = MaterialTheme.typography.titleMedium)
-            }
-
-            // Separador "ou"
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f),
-                    color = MaterialTheme.colorScheme.outlineVariant
-                )
-                Text(
-                    text = "ou",
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f),
-                    color = MaterialTheme.colorScheme.outlineVariant
-                )
-            }
-
-            // Botão "Cadastrar com o Google" (OutlinedButton)
-            OutlinedButton(
-                onClick = {
-                    coroutineScope.launch {
-                        val idToken = signInWithGoogle(context, webClientId)
-                        if (idToken != null) {
-                            viewModel.signInWithGoogle(idToken)
-                        }
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .testTag("google_sign_up_button"),
-                shape = RoundedCornerShape(16.dp),
-                enabled = !state.isLoading
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "Google Icon",
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text("Cadastrar com o Google", style = MaterialTheme.typography.titleMedium)
             }
 
             Spacer(modifier = Modifier.height(16.dp))

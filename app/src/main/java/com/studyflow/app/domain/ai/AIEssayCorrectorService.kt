@@ -52,7 +52,23 @@ class AIEssayCorrectorService(
             if (startIndex != -1 && endIndex != -1) {
                 cleanJson = cleanJson.substring(startIndex, endIndex + 1)
             }
-            json.decodeFromString(cleanJson)
+            val parsedResult = json.decodeFromString<AICorrectionResult>(cleanJson)
+
+            val c1 = parsedResult.comp1.copy(score = parsedResult.comp1.score.coerceIn(0, 200))
+            val c2 = parsedResult.comp2.copy(score = parsedResult.comp2.score.coerceIn(0, 200))
+            val c3 = parsedResult.comp3.copy(score = parsedResult.comp3.score.coerceIn(0, 200))
+            val c4 = parsedResult.comp4.copy(score = parsedResult.comp4.score.coerceIn(0, 200))
+            val c5 = parsedResult.comp5.copy(score = parsedResult.comp5.score.coerceIn(0, 200))
+            val calculatedTotal = c1.score + c2.score + c3.score + c4.score + c5.score
+
+            parsedResult.copy(
+                comp1 = c1,
+                comp2 = c2,
+                comp3 = c3,
+                comp4 = c4,
+                comp5 = c5,
+                totalScore = calculatedTotal
+            )
         } catch (e: Exception) {
             throw AIError.Unknown("Falha ao interpretar a avaliação estruturada da redação.", e)
         }

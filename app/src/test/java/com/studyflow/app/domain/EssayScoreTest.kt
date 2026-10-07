@@ -132,7 +132,7 @@ class EssayScoreTest {
     }
 
     @Test
-    fun correctEssay_withCompetencyAbove200_documentsCurrentBehavior() = runBlocking {
+    fun correctEssay_withCompetencyAbove200_clampsTo200AndRecalculatesSum() = runBlocking {
         // Simula resposta da IA onde a competência 1 veio como 250 (acima do limite do ENEM de 200)
         val jsonWithInvalidScore = sampleValidJson().replace(
             "\"comp1\": {\n    \"score\": 160",
@@ -151,15 +151,17 @@ class EssayScoreTest {
             motivationalTexts = "Motivadores..."
         )
 
-        // BUG IDENTIFICADO NA PRODUÇÃO:
-        // AIEssayCorrectorService não valida ou limita (clamp) o valor a 200, retornando 250 diretamente.
-        assertEquals(250, result.comp1.score)
-        assertTrue("BUG: Código atual permite competência acima de 200 pontos", result.comp1.score > 200)
+        // Comportamento correto implementado:
+        // AIEssayCorrectorService limita cada competência a 0..200 e recalcula totalScore
+        assertEquals(200, result.comp1.score)
+        val calculatedSum = result.comp1.score + result.comp2.score + result.comp3.score + result.comp4.score + result.comp5.score
+        assertEquals(880, calculatedSum)
+        assertEquals(calculatedSum, result.totalScore)
     }
 
     @Test
-    fun correctEssay_withTotalScoreDifferentFromSum_documentsCurrentBehavior() = runBlocking {
-        // Simula resposta da IA onde a soma das competências é 840, mas totalScore retornado é 900
+    fun correctEssay_withTotalScoreDifferentFromSum_recalculatesTotalAsSum() = runBlocking {
+        // Simula resposta da IA onde totalScore retornado é 900, mas a soma real das competências é 840
         val jsonWithInconsistentTotal = sampleValidJson().replace(
             "\"totalScore\": 840",
             "\"totalScore\": 900"
@@ -179,10 +181,9 @@ class EssayScoreTest {
 
         val actualSum = result.comp1.score + result.comp2.score + result.comp3.score + result.comp4.score + result.comp5.score
         assertEquals(840, actualSum)
-        assertEquals(900, result.totalScore)
-
-        // BUG IDENTIFICADO NA PRODUÇÃO:
-        // AIEssayCorrectorService não valida a consistência entre a soma das competências e o totalScore.
-        assertNotEquals("BUG: Código atual aceita totalScore inconsistente com a soma", actualSum, result.totalScore)
+        // Comportamento correto implementado:
+        // totalScore da IA (900) é ignorado e recalculado como a soma exata das 5 competências (840)
+        assertEquals(actualSum, result.totalScore)
+        assertEquals(840, result.totalScore)
     }
 }

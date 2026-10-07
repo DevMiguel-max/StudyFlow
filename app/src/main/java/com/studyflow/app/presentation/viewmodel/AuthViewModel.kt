@@ -80,18 +80,6 @@ class AuthViewModel(
         }
     }
 
-    fun signInWithGoogle(idToken: String) {
-        viewModelScope.launch {
-            _state.value = AuthState(isLoading = true)
-            val result = repository.signInWithGoogle(idToken)
-            if (result.isSuccess) {
-                _state.value = AuthState(isSuccess = true)
-            } else {
-                _state.value = AuthState(error = mapAuthException(result.exceptionOrNull()))
-            }
-        }
-    }
-
     fun signUpWithEmail(email: String, pass: String) {
         viewModelScope.launch {
             _state.value = AuthState(isLoading = true)
