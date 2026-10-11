@@ -1,5 +1,7 @@
 package com.studyflow.app.domain.ai
 
+import android.util.Log
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 
 object AIHelper {
@@ -8,18 +10,22 @@ object AIHelper {
         maxRetries: Int = 3,
         estimatedTokens: Int = 500,
         cacheKey: String? = null,
+        cache: AICache = AICacheManager,
         crossinline block: suspend () -> T
     ): T {
         if (cacheKey != null) {
-            try {
-                val cached = AICacheManager.get(cacheKey)
-                if (cached != null) {
-                    if (T::class == String::class) {
-                        return cached as T
-                    }
+            val cached = try {
+                cache.get(cacheKey)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w("AIHelper", "Falha ao obter entrada do cache para a chave $cacheKey", e)
+                null
+            }
+            if (cached != null) {
+                if (T::class == String::class) {
+                    return cached as T
                 }
-            } catch (ignored: Throwable) {
-                // Ignore cache access issues when running outside full app context (e.g. unit tests)
             }
         }
         
@@ -33,14 +39,16 @@ object AIHelper {
                 
                 if (cacheKey != null && result is String) {
                     try {
-                        AICacheManager.put(cacheKey, result)
-                    } catch (ignored: Throwable) {
-                        // Ignore cache write issues
+                        cache.put(cacheKey, result)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Log.w("AIHelper", "Falha ao gravar no cache para a chave $cacheKey", e)
                     }
                 }
                 
                 return result
-            } catch (e: kotlinx.coroutines.CancellationException) {
+            } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 currentAttempt++

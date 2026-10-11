@@ -36,6 +36,9 @@ class StudyFlowRepositoryImpl(
     override suspend fun insertReviewSchedule(schedule: ReviewSchedule): Long = dao.insertReviewSchedule(schedule)
 
     override fun getFlashcardsBySubject(subjectId: Int): Flow<List<Flashcard>> = dao.getFlashcardsBySubject(subjectId)
+    override fun getDueFlashcards(now: Long): Flow<List<Flashcard>> = dao.getDueFlashcards(now)
+    override fun getDueFlashcardsCount(now: Long): Flow<Int> = dao.getDueFlashcardsCount(now)
+    override fun getFlashcardCountsByBox(): Flow<List<BoxCount>> = dao.getFlashcardCountsByBox()
     override suspend fun insertFlashcard(flashcard: Flashcard): Long = dao.insertFlashcard(flashcard)
     override suspend fun updateFlashcard(flashcard: Flashcard) = dao.updateFlashcard(flashcard)
 

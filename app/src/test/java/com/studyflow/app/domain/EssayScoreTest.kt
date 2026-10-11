@@ -12,18 +12,21 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
+import com.studyflow.app.domain.ai.FakeAICache
 import org.junit.Before
 import org.junit.Test
 
 class EssayScoreTest {
 
     private lateinit var mockGeminiClient: GeminiClient
+    private lateinit var fakeCache: FakeAICache
     private lateinit var service: AIEssayCorrectorService
 
     @Before
     fun setup() {
         mockGeminiClient = mockk(relaxed = true)
-        service = AIEssayCorrectorService(geminiClient = mockGeminiClient)
+        fakeCache = FakeAICache()
+        service = AIEssayCorrectorService(geminiClient = mockGeminiClient, aiCache = fakeCache)
     }
 
     private fun sampleValidJson(): String {

@@ -70,9 +70,32 @@ open class FakeStudyFlowRepository : StudyFlowRepository {
     override fun getAllReviewSchedules(): Flow<List<ReviewSchedule>> = flowOf(emptyList())
     override suspend fun insertReviewSchedule(schedule: ReviewSchedule): Long = 0L
 
-    override fun getFlashcardsBySubject(subjectId: Int): Flow<List<Flashcard>> = flowOf(emptyList())
-    override suspend fun insertFlashcard(flashcard: Flashcard): Long = 0L
-    override suspend fun updateFlashcard(flashcard: Flashcard) {}
+    val flashcardsList = mutableListOf<Flashcard>()
+    val updatedFlashcards = mutableListOf<Flashcard>()
+
+    override fun getFlashcardsBySubject(subjectId: Int): Flow<List<Flashcard>> = flowOf(flashcardsList.filter { it.subjectId == subjectId })
+    override fun getDueFlashcards(now: Long): Flow<List<Flashcard>> = flowOf(
+        flashcardsList.filter { it.nextReviewDate <= now }.sortedBy { it.nextReviewDate }
+    )
+    override fun getDueFlashcardsCount(now: Long): Flow<Int> = flowOf(
+        flashcardsList.count { it.nextReviewDate <= now }
+    )
+    override fun getFlashcardCountsByBox(): Flow<List<BoxCount>> = flowOf(
+        flashcardsList.groupBy { it.box }.map { BoxCount(it.key, it.value.size) }
+    )
+    override suspend fun insertFlashcard(flashcard: Flashcard): Long {
+        flashcardsList.add(flashcard)
+        return flashcardsList.size.toLong()
+    }
+    override suspend fun updateFlashcard(flashcard: Flashcard) {
+        updatedFlashcards.add(flashcard)
+        val idx = flashcardsList.indexOfFirst { it.id == flashcard.id }
+        if (idx != -1) {
+            flashcardsList[idx] = flashcard
+        } else {
+            flashcardsList.add(flashcard)
+        }
+    }
 
     override fun getStudyNotesBySubject(subjectId: Int): Flow<List<StudyNote>> = flowOf(emptyList())
     override suspend fun insertStudyNote(note: StudyNote): Long = 0L

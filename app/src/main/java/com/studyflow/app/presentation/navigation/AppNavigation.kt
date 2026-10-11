@@ -175,6 +175,14 @@ fun AppNavigation() {
             composable("faculdade") { GoalTypeScreen(navController, "Faculdade") }
             composable("editais") { DocumentAnalyzerScreen(navController) }
             composable("material_generator") { MaterialGeneratorScreen(navController) }
+            
+            composable(
+                route = "flashcard_review?subjectId={subjectId}",
+                arguments = listOf(navArgument("subjectId") { type = NavType.IntType; defaultValue = -1 })
+            ) { backStackEntry ->
+                val subjectId = backStackEntry.arguments?.getInt("subjectId").let { if (it == -1 || it == null) null else it }
+                FlashcardReviewScreen(navController = navController, subjectId = subjectId)
+            }
         }
     }
 }

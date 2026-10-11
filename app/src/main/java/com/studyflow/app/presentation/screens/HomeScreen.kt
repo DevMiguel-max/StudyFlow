@@ -1,18 +1,24 @@
 package com.studyflow.app.presentation.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.studyflow.app.presentation.components.*
 import com.studyflow.app.presentation.viewmodel.HomeViewModel
@@ -137,6 +143,54 @@ fun HomeScreen(
                     AppCard(containerColor = Color(0xFFFEF3C7)) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text("⚠️ Próxima Prova em ${state.upcomingExamDays} dias", fontWeight = FontWeight.Bold, color = Color(0xFFD97706))
+                        }
+                    }
+                }
+
+                if (state.dueFlashcardsCount > 0) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    AppCard(
+                        modifier = Modifier
+                            .clickable { navController.navigate("flashcard_review") }
+                            .testTag("due_flashcards_card"),
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("🃏", fontSize = 28.sp)
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "Revisão de Flashcards",
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                    Text(
+                                        text = "${state.dueFlashcardsCount} ${if (state.dueFlashcardsCount == 1) "cartão vencido" else "cartões vencidos"} hoje (Leitner)",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                }
+                            }
+                            Button(
+                                onClick = { navController.navigate("flashcard_review") },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiary
+                                ),
+                                modifier = Modifier.testTag("home_review_now_button")
+                            ) {
+                                Text("Revisar")
+                            }
                         }
                     }
                 }

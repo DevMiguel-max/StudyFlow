@@ -4,7 +4,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.decodeFromString
 
 class AIEssayCorrectorService(
-    private val geminiClient: GeminiClient = GeminiClient()
+    private val geminiClient: GeminiClient = GeminiClient(),
+    private val aiCache: AICache = AICacheManager
 ) {
     
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }

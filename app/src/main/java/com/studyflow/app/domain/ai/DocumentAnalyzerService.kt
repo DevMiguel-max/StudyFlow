@@ -26,13 +26,14 @@ data class EditalProgramAnalysisResult(
 )
 
 class DocumentAnalyzerService(
-    private val geminiClient: GeminiClient = GeminiClient()
+    private val geminiClient: GeminiClient = GeminiClient(),
+    private val aiCache: AICache = AICacheManager
 ) {
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
     
     suspend fun analyzeDocument(text: String, analysisType: String): String {
         val cacheKey = "doc_analysis_${analysisType}_${text.hashCode()}"
-        return AIHelper.withRetryAndTelemetry("analyzeDocument_$analysisType", cacheKey = cacheKey) {
+        return AIHelper.withRetryAndTelemetry("analyzeDocument_$analysisType", cacheKey = cacheKey, cache = aiCache) {
             val systemPrompt = when (analysisType) {
                 "IDENTIFY_TYPE" -> "Você é um assistente especializado em análise de documentos. Identifique o tipo do documento (Edital, Livro, Apostila, Resumo, Lista de exercícios, etc.). Responda apenas com o tipo."
                 "SUMMARY_SHORT" -> "Faça um resumo curto (máximo 3 parágrafos) do seguinte documento."
@@ -151,7 +152,7 @@ class DocumentAnalyzerService(
 
     private suspend fun analyzeSingleEditalChunk(chunk: String): EditalProgramResult {
         val cacheKey = "edital_chunk_${chunk.hashCode()}"
-        return AIHelper.withRetryAndTelemetry("analyzeSingleEditalChunk", maxRetries = 1, cacheKey = cacheKey) {
+        return AIHelper.withRetryAndTelemetry("analyzeSingleEditalChunk", maxRetries = 1, cacheKey = cacheKey, cache = aiCache) {
             val systemPrompt = """
                 Você é um especialista em análise de editais de concursos e vestibulares.
                 Analise o trecho do edital e extraia as disciplinas, o conteúdo programático de cada uma e a lista detalhada de assuntos/tópicos.
@@ -206,7 +207,7 @@ class DocumentAnalyzerService(
     }
 
     suspend fun chatWithDocument(documentText: String, question: String): String {
-        return AIHelper.withRetryAndTelemetry("chatWithDocument") {
+        return AIHelper.withRetryAndTelemetry("chatWithDocument", cache = aiCache) {
             val systemPrompt = "Você é um assistente prestativo. Use o documento fornecido a seguir como base para responder à pergunta do usuário.\n\nDocumento:\n${documentText.take(25000)}"
 
             val response = try {

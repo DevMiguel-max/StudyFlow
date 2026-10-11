@@ -64,7 +64,7 @@ val appModule = module {
         }
     }
     
-    single<AuthRepository> { AuthRepositoryImpl(get(), androidContext()) }
+    single<AuthRepository> { AuthRepositoryImpl(get()) }
     single<SyncRepository> { SyncRepositoryImpl(get(), get(), get<com.studyflow.app.data.local.StudyFlowDatabase>().studyFlowDao()) }
     single<com.studyflow.app.domain.repository.MentorRepository> { com.studyflow.app.data.repository.MentorRepositoryImpl(get()) }
     single<StudyFlowRepository> { StudyFlowRepositoryImpl(get()) }
@@ -85,4 +85,5 @@ val appModule = module {
     viewModel { AuthViewModel(get()) }
     viewModel { SyncViewModel(get()) }
     viewModel { com.studyflow.app.presentation.viewmodel.AITutorViewModel(get()) }
+    viewModel { com.studyflow.app.presentation.viewmodel.FlashcardReviewViewModel(get(), get()) }
 }

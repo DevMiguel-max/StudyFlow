@@ -1,5 +1,6 @@
 package com.studyflow.app.presentation.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.studyflow.app.data.local.AIConversation
@@ -7,6 +8,7 @@ import com.studyflow.app.data.local.AIMessage
 import com.studyflow.app.data.local.MessageStatus
 import com.studyflow.app.domain.ai.AITutorService
 import com.studyflow.app.domain.repository.StudyFlowRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -99,7 +101,10 @@ class AITutorViewModel(
                     repository.updateAIConversation(conv.copy(updatedAt = System.currentTimeMillis(), title = newTitle))
                 }
                 
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
+                Log.e("AITutorViewModel", "Erro ao se comunicar com o tutor AI", e)
                 _state.update { it.copy(error = e.localizedMessage ?: "Erro ao se comunicar com o tutor AI.") }
             } finally {
                 _state.update { it.copy(isGenerating = false) }
@@ -132,7 +137,10 @@ class AITutorViewModel(
                 
                 val aiMsg = AIMessage(conversationId = convId, text = responseText, isUser = false)
                 repository.insertAIMessage(aiMsg)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
+                Log.e("AITutorViewModel", "Erro ao regenerar resposta", e)
                 _state.update { it.copy(error = e.localizedMessage ?: "Erro ao regenerar resposta.") }
             } finally {
                 _state.update { it.copy(isGenerating = false) }

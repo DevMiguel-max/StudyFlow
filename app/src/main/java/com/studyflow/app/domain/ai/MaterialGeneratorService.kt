@@ -9,12 +9,13 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 class MaterialGeneratorService(
-    private val geminiClient: GeminiClient = GeminiClient()
+    private val geminiClient: GeminiClient = GeminiClient(),
+    private val aiCache: AICache = AICacheManager
 ) {
     
     suspend fun generateMaterial(sourceText: String, type: String, options: Map<String, String> = emptyMap()): String {
         val cacheKey = "material_${type}_${sourceText.hashCode()}"
-        return AIHelper.withRetryAndTelemetry("generateMaterial", cacheKey = cacheKey) {
+        return AIHelper.withRetryAndTelemetry("generateMaterial", cacheKey = cacheKey, cache = aiCache) {
             val systemPrompt = when (type) {
                 "SUMMARY_QUICK" -> "Crie um resumo rápido (máximo 150 palavras) do texto a seguir, focando apenas nos pontos cruciais."
                 "SUMMARY_COMPLETE" -> "Crie um resumo completo do texto a seguir, cobrindo todos os detalhes, conceitos e definições importantes. Mantenha a estrutura em parágrafos e tópicos quando aplicável."
@@ -48,7 +49,7 @@ class MaterialGeneratorService(
 
     suspend fun generateFlashcards(sourceText: String, count: Int, difficulty: String, subjectId: Int, subjectName: String): List<Flashcard> {
         val cacheKey = "flashcards_${difficulty}_${sourceText.hashCode()}"
-        return AIHelper.withRetryAndTelemetry("generateFlashcards") {
+        return AIHelper.withRetryAndTelemetry("generateFlashcards", cache = aiCache) {
             val systemPrompt = """
                 Gere $count flashcards baseados no texto fornecido, com nível de dificuldade '$difficulty'.
                 Retorne APENAS um array JSON válido. Formato:
@@ -97,7 +98,7 @@ class MaterialGeneratorService(
     }
 
     suspend fun generateQuestions(sourceText: String, count: Int, difficulty: String, subjectId: Int, subjectName: String): List<GeneratedQuestion> {
-        return AIHelper.withRetryAndTelemetry("generateQuestions") {
+        return AIHelper.withRetryAndTelemetry("generateQuestions", cache = aiCache) {
             val systemPrompt = """
                 Gere $count questões de múltipla escolha baseadas no texto, nível de dificuldade '$difficulty'.
                 Cada questão deve ter 5 alternativas (de A a E).

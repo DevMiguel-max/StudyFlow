@@ -2,12 +2,14 @@ package com.studyflow.app.presentation.viewmodel
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.studyflow.app.data.local.AnalyzedDocument
 import com.studyflow.app.domain.ai.DocumentAnalyzerService
 import com.studyflow.app.domain.repository.DocumentAnalyzerRepository
 import com.studyflow.app.domain.util.DocumentTextExtractor
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -125,8 +127,10 @@ class DocumentAnalyzerViewModel(
                     truncationWarning = warningMessage
                 )
 
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("DocumentAnalyzerVM", "Erro ao processar documento", e)
                 _state.value = _state.value.copy(error = e.localizedMessage ?: e.message ?: "Falha no processamento do documento.")
             } finally {
                 _state.value = _state.value.copy(isProcessing = false)
@@ -159,8 +163,10 @@ class DocumentAnalyzerViewModel(
                 repository.updateDocument(updatedDoc)
                 _state.value = _state.value.copy(isProcessing = false, currentDocument = updatedDoc)
                 
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("DocumentAnalyzerVM", "Erro ao gerar resumo", e)
                 _state.value = _state.value.copy(error = e.message ?: "Falha ao gerar resumo.")
             } finally {
                 _state.value = _state.value.copy(isProcessing = false)

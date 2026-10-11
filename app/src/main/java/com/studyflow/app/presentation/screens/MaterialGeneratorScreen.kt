@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.studyflow.app.data.local.AnalyzedDocument
@@ -164,7 +165,11 @@ fun MaterialGeneratorScreen(
                                     viewModel.generateFlashcards(sourceText, quantity, difficulty, selectedSubjectId!!) 
                                 }
                             },
-                            generatedCount = state.generatedFlashcards.size
+                            generatedCount = state.generatedFlashcards.size,
+                            onReviewClick = {
+                                val route = if (selectedSubjectId != null) "flashcard_review?subjectId=$selectedSubjectId" else "flashcard_review"
+                                navController.navigate(route)
+                            }
                         )
                         2 -> QuestionsTab(
                             quantity = quantity,
@@ -236,7 +241,8 @@ fun FlashcardTab(
     difficulty: String, onDifficultyChange: (String) -> Unit,
     subjects: List<Subject>, selectedSubjectId: Int?, onSubjectChange: (Int) -> Unit,
     onGenerate: () -> Unit,
-    generatedCount: Int
+    generatedCount: Int,
+    onReviewClick: () -> Unit = {}
 ) {
     Text("Configurações dos Flashcards", style = MaterialTheme.typography.titleMedium)
     
@@ -269,6 +275,13 @@ fun FlashcardTab(
     if (generatedCount > 0) {
         Spacer(modifier = Modifier.height(16.dp))
         Text("$generatedCount flashcards gerados e salvos com sucesso na caixa de revisão 1!", color = MaterialTheme.colorScheme.primary)
+        Spacer(modifier = Modifier.height(10.dp))
+        Button(
+            onClick = onReviewClick,
+            modifier = Modifier.fillMaxWidth().testTag("review_now_button")
+        ) {
+            Text("Revisar agora")
+        }
     }
 }
 

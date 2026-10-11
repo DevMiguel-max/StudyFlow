@@ -33,6 +33,9 @@ interface StudyFlowRepository {
     suspend fun insertReviewSchedule(schedule: ReviewSchedule): Long
 
     fun getFlashcardsBySubject(subjectId: Int): Flow<List<Flashcard>>
+    fun getDueFlashcards(now: Long): Flow<List<Flashcard>>
+    fun getDueFlashcardsCount(now: Long): Flow<Int>
+    fun getFlashcardCountsByBox(): Flow<List<BoxCount>>
     suspend fun insertFlashcard(flashcard: Flashcard): Long
     suspend fun updateFlashcard(flashcard: Flashcard)
 

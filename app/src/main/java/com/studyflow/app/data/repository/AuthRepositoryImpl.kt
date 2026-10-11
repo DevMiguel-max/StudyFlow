@@ -1,6 +1,5 @@
 package com.studyflow.app.data.repository
 
-import android.content.Context
 import com.studyflow.app.domain.repository.AuthRepository
 import com.studyflow.app.domain.repository.AuthUser
 import com.google.firebase.auth.FirebaseAuth
@@ -10,8 +9,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 class AuthRepositoryImpl(
-    private val auth: FirebaseAuth,
-    private val context: Context? = null
+    private val auth: FirebaseAuth
 ) : AuthRepository {
 
     override val currentUser: Flow<AuthUser?> = callbackFlow {

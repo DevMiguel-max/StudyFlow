@@ -17,3 +17,8 @@ data class Flashcard(
     val source: String? = null,
     val createdAt: Long = System.currentTimeMillis()
 )
+
+data class BoxCount(
+    val box: Int,
+    val count: Int
+)

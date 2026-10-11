@@ -145,6 +145,18 @@ class GamificationManager(private val repository: StudyFlowRepository) {
         }
     }
 
+    suspend fun completeRevisionSession(cardsReviewed: Int) {
+        val profile = repository.getUserProfile().firstOrNull() ?: return
+        if (!profile.gamificationEnabled) return
+        if (cardsReviewed <= 0) return
+
+        updateStreak()
+        val xpProportional = cardsReviewed * 5
+        addXp(xpProportional)
+        updateProgress("flashcards_100", cardsReviewed)
+        updateChallengeProgress("REVISION", 1)
+    }
+
     private suspend fun updateChallengeProgress(type: String, amount: Int) {
         val challenges = repository.getAllChallenges().firstOrNull() ?: emptyList()
         val now = System.currentTimeMillis()

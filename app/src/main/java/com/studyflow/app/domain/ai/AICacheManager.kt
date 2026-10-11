@@ -6,13 +6,13 @@ import kotlinx.coroutines.flow.first
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-object AICacheManager : KoinComponent {
+object AICacheManager : AICache, KoinComponent {
     private const val CACHE_EXPIRATION_MS = 1000L * 60 * 60 * 24 // 24 hours
     
     private val dao: AICacheDao by inject()
     private val metadataManager: AIMetadataManager by inject()
 
-    suspend fun get(key: String): String? {
+    override suspend fun get(key: String): String? {
         val isEnabled = metadataManager.cacheEnabled.first()
         if (!isEnabled) return null
 
@@ -24,7 +24,7 @@ object AICacheManager : KoinComponent {
         return entry.content
     }
     
-    suspend fun put(key: String, data: String) {
+    override suspend fun put(key: String, data: String) {
         val isEnabled = metadataManager.cacheEnabled.first()
         if (!isEnabled) return
 
@@ -39,7 +39,7 @@ object AICacheManager : KoinComponent {
         dao.deleteExpiredCache(System.currentTimeMillis() - CACHE_EXPIRATION_MS)
     }
     
-    suspend fun clear() {
+    override suspend fun clear() {
         dao.clearAll()
         metadataManager.setLastCleanupTime(System.currentTimeMillis())
     }

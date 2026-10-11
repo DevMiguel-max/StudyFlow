@@ -130,6 +130,15 @@ interface StudyFlowDao {
 
     @Query("SELECT * FROM flashcards WHERE subjectId = :subjectId")
     fun getFlashcardsBySubject(subjectId: Int): Flow<List<Flashcard>>
+
+    @Query("SELECT * FROM flashcards WHERE nextReviewDate <= :now ORDER BY nextReviewDate ASC")
+    fun getDueFlashcards(now: Long): Flow<List<Flashcard>>
+
+    @Query("SELECT COUNT(*) FROM flashcards WHERE nextReviewDate <= :now")
+    fun getDueFlashcardsCount(now: Long): Flow<Int>
+
+    @Query("SELECT box, COUNT(*) as count FROM flashcards GROUP BY box")
+    fun getFlashcardCountsByBox(): Flow<List<BoxCount>>
     
     @Update
     suspend fun updateFlashcard(flashcard: Flashcard)

@@ -15,7 +15,7 @@ class StudyFlowApplication : Application() {
         } catch (e: Exception) {
             // Might be already initialized
         }
-        AppCheckInitializer.init()
+        AppCheckInitializer.init(this)
 
         if (org.koin.core.context.GlobalContext.getOrNull() == null) {
             startKoin {

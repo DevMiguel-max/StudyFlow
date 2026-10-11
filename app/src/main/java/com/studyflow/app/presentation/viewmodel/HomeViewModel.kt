@@ -35,7 +35,8 @@ data class HomeState(
     val totalSessionsCompleted: Int = 0,
     val userProfile: com.studyflow.app.data.local.UserProfile? = null,
     val studyTip: StudyTip? = null,
-    val isTipLoading: Boolean = false
+    val isTipLoading: Boolean = false,
+    val dueFlashcardsCount: Int = 0
 )
 
 class HomeViewModel(
@@ -128,10 +129,15 @@ class HomeViewModel(
         )
     }
 
-    val state: StateFlow<HomeState> = combine(baseState, _tipState) { base, tipInfo ->
+    val state: StateFlow<HomeState> = combine(
+        baseState,
+        _tipState,
+        repository.getDueFlashcardsCount(System.currentTimeMillis())
+    ) { base, tipInfo, dueCount ->
         base.copy(
             studyTip = tipInfo.first,
-            isTipLoading = tipInfo.second
+            isTipLoading = tipInfo.second,
+            dueFlashcardsCount = dueCount
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HomeState())
     

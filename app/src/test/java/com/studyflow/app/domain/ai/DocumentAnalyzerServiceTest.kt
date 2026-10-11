@@ -14,12 +14,14 @@ import org.junit.Test
 class DocumentAnalyzerServiceTest {
 
     private lateinit var mockGeminiClient: GeminiClient
+    private lateinit var fakeCache: FakeAICache
     private lateinit var service: DocumentAnalyzerService
 
     @Before
     fun setup() {
         mockGeminiClient = mockk(relaxed = true)
-        service = DocumentAnalyzerService(geminiClient = mockGeminiClient)
+        fakeCache = FakeAICache()
+        service = DocumentAnalyzerService(geminiClient = mockGeminiClient, aiCache = fakeCache)
     }
 
     private fun sampleValidEditalJson(disciplina: String = "Direito Constitucional"): String {

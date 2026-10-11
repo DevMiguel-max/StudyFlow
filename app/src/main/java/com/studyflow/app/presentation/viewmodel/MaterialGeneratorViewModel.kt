@@ -1,5 +1,6 @@
 package com.studyflow.app.presentation.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.studyflow.app.data.local.GeneratedMaterial
@@ -9,6 +10,7 @@ import com.studyflow.app.data.local.Subject
 import com.studyflow.app.domain.ai.MaterialGeneratorService
 import com.studyflow.app.domain.repository.MaterialGeneratorRepository
 import com.studyflow.app.domain.repository.StudyFlowRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -67,7 +69,10 @@ class MaterialGeneratorViewModel(
                     repository.insertMaterial(material)
                     _state.value = _state.value.copy(generatedSummary = result)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
+                Log.e("MaterialGeneratorVM", "Erro ao gerar resumo", e)
                 _state.value = _state.value.copy(error = e.message ?: "Erro ao gerar resumo.")
             } finally {
                 _state.value = _state.value.copy(isGenerating = false)
@@ -94,7 +99,10 @@ class MaterialGeneratorViewModel(
                     repository.insertFlashcards(flashcards)
                     _state.value = _state.value.copy(generatedFlashcards = flashcards)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
+                Log.e("MaterialGeneratorVM", "Erro ao gerar flashcards", e)
                 _state.value = _state.value.copy(error = e.message ?: "Erro ao gerar flashcards.")
             } finally {
                 _state.value = _state.value.copy(isGenerating = false)
@@ -121,7 +129,10 @@ class MaterialGeneratorViewModel(
                     repository.insertQuestions(questions)
                     _state.value = _state.value.copy(generatedQuestions = questions)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
+                Log.e("MaterialGeneratorVM", "Erro ao gerar questões", e)
                 _state.value = _state.value.copy(error = e.message ?: "Erro ao gerar questões.")
             } finally {
                 _state.value = _state.value.copy(isGenerating = false)

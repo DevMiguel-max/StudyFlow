@@ -49,6 +49,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         askNotificationPermission()
+        AppCheckInitializer.init(this, intent)
         setContent {
             StudyFlowTheme {
                 Surface(
