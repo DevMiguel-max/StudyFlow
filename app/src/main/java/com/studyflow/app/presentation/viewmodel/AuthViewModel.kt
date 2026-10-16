@@ -12,9 +12,11 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.studyflow.app.domain.repository.AuthRepository
 import com.studyflow.app.domain.repository.AuthUser
+import com.studyflow.app.domain.repository.StudyFlowRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -25,13 +27,33 @@ data class AuthState(
 )
 
 class AuthViewModel(
-    private val repository: AuthRepository
+    private val repository: AuthRepository,
+    private val studyFlowRepository: StudyFlowRepository? = null
 ) : ViewModel() {
     val currentUser: StateFlow<AuthUser?> = repository.currentUser
         .stateIn(viewModelScope, SharingStarted.Lazily, null)
 
     private val _state = MutableStateFlow(AuthState())
     val state: StateFlow<AuthState> = _state
+
+    private suspend fun syncLocalProfileOnAuthSuccess(user: AuthUser?) {
+        if (user != null && studyFlowRepository != null) {
+            try {
+                val current = studyFlowRepository.getUserProfile().firstOrNull() ?: com.studyflow.app.data.local.UserProfile()
+                val updatedName = user.displayName?.takeIf { it.isNotBlank() } ?: current.name
+                val updatedEmail = user.email ?: current.email
+                studyFlowRepository.updateUserProfile(
+                    current.copy(
+                        name = updatedName,
+                        email = updatedEmail,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                )
+            } catch (e: Exception) {
+                Log.w("AuthViewModel", "Não foi possível atualizar perfil local no login", e)
+            }
+        }
+    }
 
     private fun mapAuthException(e: Throwable?): String {
         if (e != null) {
@@ -73,6 +95,7 @@ class AuthViewModel(
             _state.value = AuthState(isLoading = true)
             val result = repository.signInWithEmail(email, pass)
             if (result.isSuccess) {
+                syncLocalProfileOnAuthSuccess(result.getOrNull())
                 _state.value = AuthState(isSuccess = true)
             } else {
                 _state.value = AuthState(error = mapAuthException(result.exceptionOrNull()))
@@ -85,6 +108,7 @@ class AuthViewModel(
             _state.value = AuthState(isLoading = true)
             val result = repository.signUpWithEmail(email, pass)
             if (result.isSuccess) {
+                syncLocalProfileOnAuthSuccess(result.getOrNull())
                 _state.value = AuthState(isSuccess = true)
             } else {
                 _state.value = AuthState(error = mapAuthException(result.exceptionOrNull()))
@@ -114,6 +138,27 @@ class AuthViewModel(
         viewModelScope.launch {
             repository.deleteAccount()
         }
+    }
+
+    fun signInWithGoogle(idToken: String) {
+        viewModelScope.launch {
+            _state.value = AuthState(isLoading = true)
+            val result = repository.signInWithGoogle(idToken)
+            if (result.isSuccess) {
+                syncLocalProfileOnAuthSuccess(result.getOrNull())
+                _state.value = AuthState(isSuccess = true)
+            } else {
+                _state.value = AuthState(error = mapAuthException(result.exceptionOrNull()))
+            }
+        }
+    }
+
+    fun setError(message: String) {
+        _state.value = _state.value.copy(error = message, isLoading = false)
+    }
+
+    fun setLoading(loading: Boolean) {
+        _state.value = _state.value.copy(isLoading = loading)
     }
 
     fun clearError() {

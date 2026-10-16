@@ -82,7 +82,7 @@ val appModule = module {
     viewModel { SimulationViewModel(get(), get()) }
     viewModel { StatisticsViewModel(get()) }
     viewModel { ProfileViewModel(get(), get()) }
-    viewModel { AuthViewModel(get()) }
+    viewModel { AuthViewModel(get(), get()) }
     viewModel { SyncViewModel(get()) }
     viewModel { com.studyflow.app.presentation.viewmodel.AITutorViewModel(get()) }
     viewModel { com.studyflow.app.presentation.viewmodel.FlashcardReviewViewModel(get(), get()) }

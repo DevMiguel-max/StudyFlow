@@ -1,5 +1,9 @@
 package com.studyflow.app.presentation.screens
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.util.Log
 import android.util.Patterns
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -20,14 +24,120 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.navigation.NavController
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+import com.studyflow.app.R
 import com.studyflow.app.presentation.viewmodel.AuthViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+
+internal fun Context.findActivity(): Activity? {
+    var currentContext = this
+    while (currentContext is ContextWrapper) {
+        if (currentContext is Activity) return currentContext
+        currentContext = currentContext.baseContext
+    }
+    return null
+}
+
+internal fun launchGoogleSignIn(
+    context: Context,
+    viewModel: AuthViewModel,
+    scope: CoroutineScope
+) {
+    val activity = context.findActivity()
+    if (activity == null) {
+        viewModel.setError("Não foi possível identificar a janela do app para o login Google.")
+        return
+    }
+
+    val clientId = try {
+        context.getString(R.string.default_web_client_id)
+    } catch (e: Exception) {
+        viewModel.setError("Configuração Google Sign-In ausente: default_web_client_id não encontrado.")
+        return
+    }
+
+    val credentialManager = CredentialManager.create(context)
+    val signInOption = GetSignInWithGoogleOption.Builder(serverClientId = clientId).build()
+    val request = GetCredentialRequest.Builder().addCredentialOption(signInOption).build()
+
+    viewModel.setLoading(true)
+    scope.launch {
+        try {
+            val result = credentialManager.getCredential(activity, request)
+            val credential = result.credential
+            if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                val googleIdToken = GoogleIdTokenCredential.createFrom(credential.data).idToken
+                viewModel.signInWithGoogle(googleIdToken)
+            } else {
+                viewModel.setError("Tipo de credencial incompatível retornado pelo Google.")
+            }
+        } catch (e: GetCredentialCancellationException) {
+            Log.w("AuthScreens", "Google Sign-In cancelado ou dispensado", e)
+            viewModel.setLoading(false)
+        } catch (e: Exception) {
+            Log.e("AuthScreens", "Erro no fluxo de autenticação com o Google", e)
+            viewModel.setError(e.localizedMessage ?: "Falha ao autenticar com o Google.")
+        }
+    }
+}
+
+@Composable
+fun GoogleSignInButton(
+    text: String,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier
+) {
+    OutlinedButton(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant
+        )
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_google),
+                contentDescription = "Google",
+                tint = Color.Unspecified,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,6 +151,8 @@ fun LoginScreen(
 
     val state by viewModel.state.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     val isEmailValid = email.isNotEmpty() && Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
     val emailError = if (email.isNotEmpty() && !isEmailValid) "E-mail inválido" else null
@@ -158,6 +270,30 @@ fun LoginScreen(
                 Text("Entrar", style = MaterialTheme.typography.titleMedium)
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
+                Text(
+                    text = "ou",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            GoogleSignInButton(
+                text = "Entrar com o Google",
+                onClick = { launchGoogleSignIn(context, viewModel, scope) },
+                enabled = !state.isLoading
+            )
+
             Spacer(modifier = Modifier.height(20.dp))
 
             // 6) Links "Criar conta" e "Esqueci a senha"
@@ -212,6 +348,8 @@ fun SignUpScreen(
 
     val state by viewModel.state.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     val isEmailValid = email.isNotEmpty() && Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
     val emailError = if (email.isNotEmpty() && !isEmailValid) "E-mail inválido" else null
@@ -224,17 +362,13 @@ fun SignUpScreen(
 
     val isSignUpFormValid = isEmailValid && isPasswordValid && isConfirmValid
 
-    LaunchedEffect(state.isSuccess) {
-        if (state.isSuccess) {
-            navController.popBackStack()
-        }
-    }
-
-    LaunchedEffect(currentUser) {
+    LaunchedEffect(currentUser, state.isSuccess) {
         if (currentUser != null) {
             navController.navigate("home") {
                 popUpTo("login") { inclusive = true }
             }
+        } else if (state.isSuccess) {
+            navController.popBackStack()
         }
     }
 
@@ -360,6 +494,30 @@ fun SignUpScreen(
             ) {
                 Text("Cadastrar", style = MaterialTheme.typography.titleMedium)
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
+                Text(
+                    text = "ou",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            GoogleSignInButton(
+                text = "Cadastrar com o Google",
+                onClick = { launchGoogleSignIn(context, viewModel, scope) },
+                enabled = !state.isLoading
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
