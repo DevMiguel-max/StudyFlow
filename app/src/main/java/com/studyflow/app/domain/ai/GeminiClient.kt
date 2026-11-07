@@ -6,9 +6,11 @@ import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.generationConfig
 import com.google.firebase.ai.type.content
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.withTimeout
 
 class GeminiClient(
     val defaultModelName: String = AIConfig.MODEL
@@ -17,7 +19,7 @@ class GeminiClient(
         private const val TAG = "GeminiClient"
     }
 
-    private val ai = Firebase.ai(backend = GenerativeBackend.googleAI())
+    private val ai by lazy { Firebase.ai(backend = GenerativeBackend.googleAI()) }
 
     suspend fun generateText(
         prompt: String,
@@ -46,8 +48,12 @@ class GeminiClient(
                 systemInstruction = sysContent
             )
 
-            val response = model.generateContent(prompt)
+            val response = withTimeout(60_000L) {
+                model.generateContent(prompt)
+            }
             response.text ?: ""
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Exceção capturada ao gerar conteúdo com o modelo $targetModel", e)
             throw e.toAIError()
@@ -63,6 +69,7 @@ class GeminiClient(
         return model.generateContentStream(prompt)
             .map { it.text ?: "" }
             .catch { e ->
+                if (e is CancellationException) throw e
                 Log.e(TAG, "Exceção capturada no stream do modelo $targetModel", e)
                 throw e.toAIError()
             }

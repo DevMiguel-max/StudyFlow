@@ -22,15 +22,34 @@ import com.studyflow.app.presentation.viewmodel.MaterialGeneratorViewModel
 import org.koin.androidx.compose.koinViewModel
 import dev.jeziellago.compose.markdowntext.MarkdownText
 
+import com.studyflow.app.domain.manager.PrivacyManager
+import com.studyflow.app.presentation.components.AIConsentDialog
+import org.koin.compose.koinInject
+import kotlinx.coroutines.launch
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MaterialGeneratorScreen(
     navController: NavController,
-    viewModel: MaterialGeneratorViewModel = koinViewModel()
+    viewModel: MaterialGeneratorViewModel = koinViewModel(),
+    privacyManager: PrivacyManager = koinInject()
 ) {
     val state by viewModel.state.collectAsState()
     val documents by viewModel.analyzedDocuments.collectAsState()
     val subjects by viewModel.subjects.collectAsState()
+    val aiConsentGranted by privacyManager.aiConsentGranted.collectAsState(initial = false)
+    val scope = rememberCoroutineScope()
+    var showConsentDialog by remember { mutableStateOf(false) }
+    var pendingAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    
+    fun runWithConsent(action: () -> Unit) {
+        if (aiConsentGranted) {
+            action()
+        } else {
+            pendingAction = action
+            showConsentDialog = true
+        }
+    }
     
     var sourceText by remember { mutableStateOf("") }
     var selectedDoc by remember { mutableStateOf<AnalyzedDocument?>(null) }
@@ -149,7 +168,11 @@ fun MaterialGeneratorScreen(
                         0 -> SummaryTab(
                             type = summaryType,
                             onTypeChange = { summaryType = it },
-                            onGenerate = { viewModel.generateSummary(sourceText, summaryType, "Resumo Gerado") },
+                            onGenerate = { 
+                                runWithConsent {
+                                    viewModel.generateSummary(sourceText, summaryType, "Resumo Gerado")
+                                }
+                            },
                             generatedSummary = state.generatedSummary
                         )
                         1 -> FlashcardTab(
@@ -162,7 +185,9 @@ fun MaterialGeneratorScreen(
                             onSubjectChange = { selectedSubjectId = it },
                             onGenerate = { 
                                 if (selectedSubjectId != null) {
-                                    viewModel.generateFlashcards(sourceText, quantity, difficulty, selectedSubjectId!!) 
+                                    runWithConsent {
+                                        viewModel.generateFlashcards(sourceText, quantity, difficulty, selectedSubjectId!!) 
+                                    }
                                 }
                             },
                             generatedCount = state.generatedFlashcards.size,
@@ -183,20 +208,43 @@ fun MaterialGeneratorScreen(
                             onSubjectChange = { selectedSubjectId = it },
                             onGenerate = {
                                 if (selectedSubjectId != null) {
-                                    viewModel.generateQuestions(sourceText, quantity, difficulty, questionType, selectedSubjectId!!)
+                                    runWithConsent {
+                                        viewModel.generateQuestions(sourceText, quantity, difficulty, questionType, selectedSubjectId!!)
+                                    }
                                 }
                             },
                             generatedQuestions = state.generatedQuestions,
                             onAnswer = { q, a -> viewModel.answerQuestion(q, a) }
                         )
                         3 -> MindMapTab(
-                            onGenerate = { viewModel.generateSummary(sourceText, "MIND_MAP", "Mapa Mental Gerado") },
+                            onGenerate = { 
+                                runWithConsent {
+                                    viewModel.generateSummary(sourceText, "MIND_MAP", "Mapa Mental Gerado")
+                                }
+                            },
                             generatedMindMap = state.generatedSummary
                         )
                     }
                 }
             }
         }
+    }
+
+    if (showConsentDialog) {
+        AIConsentDialog(
+            onAccept = {
+                scope.launch {
+                    privacyManager.setAiConsent(true)
+                    showConsentDialog = false
+                    pendingAction?.invoke()
+                    pendingAction = null
+                }
+            },
+            onDismiss = {
+                showConsentDialog = false
+                pendingAction = null
+            }
+        )
     }
 }
 

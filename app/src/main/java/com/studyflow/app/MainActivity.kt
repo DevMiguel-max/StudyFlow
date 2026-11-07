@@ -47,9 +47,9 @@ class MainActivity : ComponentActivity() {
 
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        AppCheckInitializer.init(this, intent)
         enableEdgeToEdge()
         askNotificationPermission()
-        AppCheckInitializer.init(this, intent)
         setContent {
             StudyFlowTheme {
                 Surface(

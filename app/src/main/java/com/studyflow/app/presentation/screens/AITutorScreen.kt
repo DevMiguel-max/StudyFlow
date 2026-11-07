@@ -34,16 +34,25 @@ import com.studyflow.app.presentation.viewmodel.AITutorViewModel
 import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+import com.studyflow.app.domain.manager.PrivacyManager
+import com.studyflow.app.presentation.components.AIConsentDialog
+import org.koin.compose.koinInject
+import kotlinx.coroutines.launch
 import dev.jeziellago.compose.markdowntext.MarkdownText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AITutorScreen(
     navController: NavController,
-    viewModel: AITutorViewModel = koinViewModel()
+    viewModel: AITutorViewModel = koinViewModel(),
+    privacyManager: PrivacyManager = koinInject()
 ) {
     val state by viewModel.state.collectAsState()
+    val aiConsentGranted by privacyManager.aiConsentGranted.collectAsState(initial = false)
     var showSettings by remember { mutableStateOf(false) }
+    var showConsentDialog by remember { mutableStateOf(false) }
+    var pendingMessage by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -81,12 +90,42 @@ fun AITutorScreen(
             } else {
                 ChatInterface(
                     state = state,
-                    onSendMessage = { viewModel.sendMessage(it) },
+                    onSendMessage = { msg ->
+                        if (aiConsentGranted) {
+                            viewModel.sendMessage(msg)
+                        } else {
+                            pendingMessage = msg
+                            showConsentDialog = true
+                        }
+                    },
                     onClearHistory = { viewModel.clearHistory() },
-                    onRegenerate = { viewModel.regenerateLastMessage() }
+                    onRegenerate = {
+                        if (aiConsentGranted) {
+                            viewModel.regenerateLastMessage()
+                        } else {
+                            showConsentDialog = true
+                        }
+                    }
                 )
             }
         }
+    }
+
+    if (showConsentDialog) {
+        AIConsentDialog(
+            onAccept = {
+                scope.launch {
+                    privacyManager.setAiConsent(true)
+                    showConsentDialog = false
+                    pendingMessage?.let { viewModel.sendMessage(it) }
+                    pendingMessage = null
+                }
+            },
+            onDismiss = {
+                showConsentDialog = false
+                pendingMessage = null
+            }
+        )
     }
 
     if (showSettings) {

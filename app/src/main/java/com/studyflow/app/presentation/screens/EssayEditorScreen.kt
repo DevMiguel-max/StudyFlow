@@ -17,15 +17,24 @@ import com.studyflow.app.presentation.viewmodel.EssayViewModel
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 
+import com.studyflow.app.domain.manager.PrivacyManager
+import com.studyflow.app.presentation.components.AIConsentDialog
+import org.koin.compose.koinInject
+import kotlinx.coroutines.launch
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EssayEditorScreen(
     navController: NavController,
     submissionId: Int,
     themeId: Int,
-    viewModel: EssayViewModel = koinViewModel()
+    viewModel: EssayViewModel = koinViewModel(),
+    privacyManager: PrivacyManager = koinInject()
 ) {
     val state by viewModel.state.collectAsState()
+    val aiConsentGranted by privacyManager.aiConsentGranted.collectAsState(initial = false)
+    val scope = rememberCoroutineScope()
+    var showConsentDialog by remember { mutableStateOf(false) }
 
     var text by remember { mutableStateOf("") }
     var timeSpentSeconds by remember { mutableStateOf(0) }
@@ -79,8 +88,12 @@ fun EssayEditorScreen(
                 actions = {
                     if (!isReadOnly) {
                         IconButton(onClick = { 
-                            viewModel.submitForCorrection(text, timeSpentSeconds)
-                            navController.popBackStack()
+                            if (aiConsentGranted) {
+                                viewModel.submitForCorrection(text, timeSpentSeconds)
+                                navController.popBackStack()
+                            } else {
+                                showConsentDialog = true
+                            }
                         }) {
                             Icon(Icons.Default.Send, contentDescription = "Enviar para Correção")
                         }
@@ -155,5 +168,21 @@ fun EssayEditorScreen(
                 }
             }
         }
+    }
+
+    if (showConsentDialog) {
+        AIConsentDialog(
+            onAccept = {
+                scope.launch {
+                    privacyManager.setAiConsent(true)
+                    showConsentDialog = false
+                    viewModel.submitForCorrection(text, timeSpentSeconds)
+                    navController.popBackStack()
+                }
+            },
+            onDismiss = {
+                showConsentDialog = false
+            }
+        )
     }
 }

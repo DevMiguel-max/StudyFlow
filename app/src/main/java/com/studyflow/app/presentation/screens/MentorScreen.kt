@@ -16,13 +16,22 @@ import com.studyflow.app.data.local.MentorProfile
 import com.studyflow.app.data.local.MentorRecommendation
 import com.studyflow.app.data.local.SmartMission
 
+import com.studyflow.app.domain.manager.PrivacyManager
+import com.studyflow.app.presentation.components.AIConsentDialog
+import org.koin.compose.koinInject
+import kotlinx.coroutines.launch
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MentorScreen(
     onNavigateBack: () -> Unit,
-    viewModel: MentorViewModel = koinViewModel()
+    viewModel: MentorViewModel = koinViewModel(),
+    privacyManager: PrivacyManager = koinInject()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val aiConsentGranted by privacyManager.aiConsentGranted.collectAsState(initial = false)
+    var showConsentDialog by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     var currentTab by remember { mutableStateOf(0) }
     val tabs = listOf("Painel", "Perfil", "Missões")
 
@@ -37,7 +46,13 @@ fun MentorScreen(
                 },
                 actions = {
                     if (!uiState.isLoading) {
-                        IconButton(onClick = { viewModel.runAnalysis() }) {
+                        IconButton(onClick = { 
+                            if (aiConsentGranted) {
+                                viewModel.runAnalysis()
+                            } else {
+                                showConsentDialog = true
+                            }
+                        }) {
                             Icon(Icons.Default.Refresh, contentDescription = "Analisar Progresso")
                         }
                     }
@@ -71,7 +86,13 @@ fun MentorScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
-                            onClick = { viewModel.runAnalysis() },
+                            onClick = { 
+                                if (aiConsentGranted) {
+                                    viewModel.runAnalysis()
+                                } else {
+                                    showConsentDialog = true
+                                }
+                            },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.error,
                                 contentColor = MaterialTheme.colorScheme.onError
@@ -105,6 +126,21 @@ fun MentorScreen(
                 }
             }
         }
+    }
+
+    if (showConsentDialog) {
+        AIConsentDialog(
+            onAccept = {
+                scope.launch {
+                    privacyManager.setAiConsent(true)
+                    showConsentDialog = false
+                    viewModel.runAnalysis()
+                }
+            },
+            onDismiss = {
+                showConsentDialog = false
+            }
+        )
     }
 }
 

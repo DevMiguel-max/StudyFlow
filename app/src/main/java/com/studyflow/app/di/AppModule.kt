@@ -64,7 +64,9 @@ val appModule = module {
         }
     }
     
-    single<AuthRepository> { AuthRepositoryImpl(get()) }
+    single { com.studyflow.app.domain.manager.PrivacyManager(androidContext()) }
+    single { com.studyflow.app.domain.util.UserDataExporter(get()) }
+    single<AuthRepository> { AuthRepositoryImpl(get(), get(), get(), get(), androidContext()) }
     single<SyncRepository> { SyncRepositoryImpl(get(), get(), get<com.studyflow.app.data.local.StudyFlowDatabase>().studyFlowDao()) }
     single<com.studyflow.app.domain.repository.MentorRepository> { com.studyflow.app.data.repository.MentorRepositoryImpl(get()) }
     single<StudyFlowRepository> { StudyFlowRepositoryImpl(get()) }

@@ -1,0 +1,77 @@
+POLÍTICA DE PRIVACIDADE — STUDYFLOW
+Versão: 1.0 (Novembro/2026)
+
+Esta Política de Privacidade descreve como o StudyFlow ("Aplicativo", "nós") coleta, armazena, utiliza e protege os seus dados pessoais, em estrita conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei 13.709/2018), o Marco Civil da Internet (Lei 12.965/2014) e o ECA Digital (Lei 15.211/2025).
+
+1. IDENTIFICAÇÃO DO CONTROLADOR E DO ENCARREGADO (DPO)
+Controlador dos dados:
+[PREENCHER: Razão Social ou Nome do Controlador]
+[PREENCHER: CNPJ ou CPF do Controlador]
+[PREENCHER: Endereço completo da sede do Controlador]
+Encarregado pelo Tratamento de Dados Pessoais (DPO):
+[PREENCHER: Nome do Encarregado / Equipe de Privacidade]
+Canal de Comunicação e Atendimento LGPD:
+[PREENCHER: E-mail de Contato do DPO / Canal de Privacidade]
+
+2. DADOS COLETADOS E FINALIDADES DO TRATAMENTO
+Para a prestação dos serviços do StudyFlow, tratamos os seguintes dados:
+a) Dados Cadastrais e de Identificação:
+   - E-mail e nome de exibição: para autenticação, identificação e recuperação de acesso à conta.
+   - Faixa etária declarada (menor de 12 anos, 12 a 17 anos, 18 anos ou mais): para garantir a conformidade com o ECA Digital (bloqueio para menores de 12 anos e proteção com Analytics desligado para 12 a 17 anos). Não coletamos data de nascimento.
+   - Versão dos termos aceitos e carimbo de data/hora (timestamp): para comprovação regulatória de consentimento válido.
+
+b) Dados de Estudos, Produtividade e Conteúdo do Usuário:
+   - Metas de estudo, matérias, tarefas cadastradas, sessões de estudo Pomodoro, cronogramas e anotações.
+   - Textos de redação submetidos para treino e correção.
+   - Notas de simulados e métricas de desempenho acadêmico.
+   - Flashcards e histórico de revisões pelo Sistema Leitner.
+   - Documentos e editais em formato PDF selecionados voluntariamente pelo usuário para extração de conteúdo e análise de tópicos.
+
+c) Dados de Telemetria e Uso (Analytics):
+   - Dados anônimos de interação e telas navegadas no app.
+   - ESTES DADOS NÃO SÃO COLETADOS POR PADRÃO. O recurso de Analytics encontra-se desativado nativamente no aplicativo e só é ativado se você conceder consentimento voluntário expresso na tela de Configurações ("Compartilhar dados de uso"). Para menores de 18 anos, a coleta permanece desativada.
+
+3. SERVIÇOS DE TERCEIROS E PROCESSAMENTO EXTERNO
+Para viabilizar a infraestrutura do Aplicativo, integramos os seguintes serviços fornecidos pela Google LLC:
+a) Firebase Authentication: gestão de credenciais e autenticação segura (e-mail/senha ou Google Sign-In via Credential Manager).
+b) Firebase Cloud Firestore: armazenamento em nuvem opcional para sincronização de progresso e perfil entre dispositivos.
+c) Firebase AI Logic e Google Gemini: processamento de prompts e inteligência artificial para o Tutor, Mentor, correção de redações e geração de resumos/questões.
+d) Firebase Analytics: métricas de uso sob controle estrito de opt-in.
+
+4. TRANSFERÊNCIA INTERNACIONAL DE DADOS
+Os serviços de nuvem e de inteligência artificial generativa (Google Cloud / Firebase e Google Gemini) utilizam infraestrutura de servidores de alta segurança localizados nos Estados Unidos da América ou em outras jurisdições internacionais. A transferência internacional ocorre com base nos artigos 33 a 36 da LGPD, amparada por cláusulas contratuais padrão e rigorosas medidas técnicas de criptografia em trânsito (HTTPS/TLS) e em repouso.
+
+5. CONSENTIMENTO ESPECÍFICO PARA RECURSOS DE INTELIGÊNCIA ARTIFICIAL
+O processamento de texto e documentos por meio da inteligência artificial Google Gemini é estritamente opcional.
+Antes do primeiro uso de qualquer módulo de IA, é apresentado um diálogo modal esclarecendo que o conteúdo enviado é processado pelo Google Gemini e orientando a não enviar dados sensíveis, informações confidenciais ou dados de terceiros.
+Você pode revogar ou conceder novamente esse consentimento a qualquer momento nas Configurações. Se recusar, apenas as funções de IA ficam indisponíveis; todo o restante do Aplicativo continuará funcionando normalmente.
+
+6. RETENÇÃO E ELIMINAÇÃO DE DADOS
+- Dados do Usuário: são mantidos enquanto sua conta permanecer ativa no StudyFlow.
+- Cache de Respostas de IA: as respostas temporárias em cache no dispositivo expiram e são automaticamente excluídas após 30 (trinta) dias, havendo rotina de purga na abertura do aplicativo.
+- Exclusão Definitiva da Conta: a qualquer momento, você pode acionar a opção "Excluir Conta" em Configurações. Ao confirmar, o Aplicativo:
+  1. Apaga permanentemente todos os seus documentos e subcoleções no Firestore em lote;
+  2. Limpa completamente todas as tabelas do banco de dados local Room, preferências e caches no dispositivo;
+  3. Exclui a conta no Firebase Authentication;
+  4. Realiza o logout irreversível.
+
+7. DIREITOS DO TITULAR DOS DADOS (ARTIGO 18 DA LGPD)
+Você possui os seguintes direitos garantidos por lei:
+a) Confirmação da existência de tratamento e acesso aos seus dados;
+b) Correção de dados incompletos, inexatos ou desatualizados;
+c) Portabilidade dos dados: você pode exportar a totalidade dos seus dados a qualquer momento em formato JSON legível pelo botão "Exportar meus dados" em Configurações;
+d) Eliminação dos dados pessoais tratados com o seu consentimento;
+e) Informação sobre as entidades públicas e privadas com as quais o controlador realizou uso compartilhado de dados;
+f) Informação sobre a possibilidade de não fornecer consentimento e sobre as consequências da negativa;
+g) Revogação do consentimento.
+
+8. SEGURANÇA DA INFORMAÇÃO
+- Não é permitido tráfego em texto puro (HTTP sem criptografia); toda a comunicação ocorre via HTTPS seguro.
+- O backup do sistema operacional exclui os arquivos do banco de dados Room.
+- Mecanismos de higienização de logs garantem que senhas, tokens, e-mails e conteúdos textuais de redações/documentos não sejam gravados em arquivos de log do dispositivo.
+
+9. CONTATO E EXERCÍCIO DE DIREITOS
+Para esclarecer dúvidas sobre esta Política, registrar solicitações ou exercer qualquer direito relativo aos seus dados pessoais, entre em contato diretamente com o nosso Encarregado pelo canal:
+[PREENCHER: E-mail de Contato do DPO / Canal de Privacidade]
+[PREENCHER: Telefone ou Formulário Web de Atendimento, se houver]
+Prazo de resposta: atenderemos suas requisições nos prazos e condições estabelecidos pela legislação vigente.

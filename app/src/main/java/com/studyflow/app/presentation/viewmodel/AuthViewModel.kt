@@ -20,10 +20,14 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
+
 data class AuthState(
     val isLoading: Boolean = false,
     val error: String? = null,
-    val isSuccess: Boolean = false
+    val isSuccess: Boolean = false,
+    val isRecentLoginRequired: Boolean = false,
+    val isAccountDeleted: Boolean = false
 )
 
 class AuthViewModel(
@@ -61,6 +65,8 @@ class AuthViewModel(
         }
         val message = e?.message.orEmpty()
         return when (e) {
+            is FirebaseAuthRecentLoginRequiredException ->
+                "Operação sensível: por segurança, confirme suas credenciais antes de continuar."
             is FirebaseAuthInvalidUserException,
             is FirebaseAuthInvalidCredentialsException -> "E-mail ou senha incorretos"
             is FirebaseAuthUserCollisionException -> "Este e-mail já está cadastrado"
@@ -136,8 +142,59 @@ class AuthViewModel(
     
     fun deleteAccount() {
         viewModelScope.launch {
-            repository.deleteAccount()
+            _state.value = _state.value.copy(isLoading = true, error = null, isRecentLoginRequired = false)
+            val result = repository.deleteAccount()
+            if (result.isSuccess) {
+                _state.value = AuthState(isAccountDeleted = true)
+            } else {
+                val exception = result.exceptionOrNull()
+                if (exception is FirebaseAuthRecentLoginRequiredException) {
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        isRecentLoginRequired = true,
+                        error = "Por segurança, confirme sua senha ou conta Google para autorizar a exclusão da conta."
+                    )
+                } else {
+                    _state.value = AuthState(
+                        error = "Falha ao excluir conta: ${exception?.localizedMessage ?: "Erro desconhecido"}"
+                    )
+                }
+            }
         }
+    }
+
+    fun reauthenticateAndRetryDelete(password: String) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true, error = null)
+            val reauthResult = repository.reauthenticateWithEmail(password)
+            if (reauthResult.isSuccess) {
+                deleteAccount()
+            } else {
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    error = mapAuthException(reauthResult.exceptionOrNull())
+                )
+            }
+        }
+    }
+
+    fun reauthenticateWithGoogleAndRetryDelete(idToken: String) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true, error = null)
+            val reauthResult = repository.reauthenticateWithGoogle(idToken)
+            if (reauthResult.isSuccess) {
+                deleteAccount()
+            } else {
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    error = mapAuthException(reauthResult.exceptionOrNull())
+                )
+            }
+        }
+    }
+
+    fun dismissRecentLoginRequired() {
+        _state.value = _state.value.copy(isRecentLoginRequired = false)
     }
 
     fun signInWithGoogle(idToken: String) {

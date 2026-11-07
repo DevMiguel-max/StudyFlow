@@ -23,23 +23,38 @@ import com.studyflow.app.presentation.viewmodel.DocumentAnalyzerViewModel
 import org.koin.androidx.compose.koinViewModel
 import dev.jeziellago.compose.markdowntext.MarkdownText
 
+import com.studyflow.app.domain.manager.PrivacyManager
+import com.studyflow.app.presentation.components.AIConsentDialog
+import org.koin.compose.koinInject
+import kotlinx.coroutines.launch
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DocumentAnalyzerScreen(
     navController: NavController,
-    viewModel: DocumentAnalyzerViewModel = koinViewModel()
+    viewModel: DocumentAnalyzerViewModel = koinViewModel(),
+    privacyManager: PrivacyManager = koinInject()
 ) {
     val state by viewModel.state.collectAsState()
     val documents by viewModel.documents.collectAsState()
+    val aiConsentGranted by privacyManager.aiConsentGranted.collectAsState(initial = false)
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("Todos") }
+    var showConsentDialog by remember { mutableStateOf(false) }
+    var pendingAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let {
-            viewModel.importAndAnalyzeDocument(context, it)
+            if (aiConsentGranted) {
+                viewModel.importAndAnalyzeDocument(context, it)
+            } else {
+                pendingAction = { viewModel.importAndAnalyzeDocument(context, it) }
+                showConsentDialog = true
+            }
         }
     }
 
@@ -51,7 +66,12 @@ fun DocumentAnalyzerScreen(
                 viewModel.deleteDocument(state.currentDocument!!)
             },
             onGenerateSummary = { type ->
-                viewModel.generateSummary(state.currentDocument!!.id, type)
+                if (aiConsentGranted) {
+                    viewModel.generateSummary(state.currentDocument!!.id, type)
+                } else {
+                    pendingAction = { viewModel.generateSummary(state.currentDocument!!.id, type) }
+                    showConsentDialog = true
+                }
             },
             isProcessing = state.isProcessing,
             progressMessage = state.progressMessage,
@@ -164,6 +184,23 @@ fun DocumentAnalyzerScreen(
                 }
             }
         }
+    }
+
+    if (showConsentDialog) {
+        AIConsentDialog(
+            onAccept = {
+                scope.launch {
+                    privacyManager.setAiConsent(true)
+                    showConsentDialog = false
+                    pendingAction?.invoke()
+                    pendingAction = null
+                }
+            },
+            onDismiss = {
+                showConsentDialog = false
+                pendingAction = null
+            }
+        )
     }
 }
 

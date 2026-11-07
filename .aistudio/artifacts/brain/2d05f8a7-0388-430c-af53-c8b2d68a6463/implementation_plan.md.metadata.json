@@ -1,0 +1,6 @@
+{
+  "summary":  "Plano de implementação para fluxo de consentimento prévio e verificação etária (ECA Digital e LGPD) na inicialização do aplicativo, cobrindo o acesso por login, cadastro e modo offline, além do gerenciamento e revogação em Configurações.",
+  "updatedAt":  "2026-11-07T23:12:04.241427305Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

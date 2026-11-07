@@ -131,6 +131,9 @@ interface StudyFlowDao {
     @Query("SELECT * FROM flashcards WHERE subjectId = :subjectId")
     fun getFlashcardsBySubject(subjectId: Int): Flow<List<Flashcard>>
 
+    @Query("SELECT * FROM flashcards")
+    fun getAllFlashcards(): Flow<List<Flashcard>>
+
     @Query("SELECT * FROM flashcards WHERE nextReviewDate <= :now ORDER BY nextReviewDate ASC")
     fun getDueFlashcards(now: Long): Flow<List<Flashcard>>
 
@@ -149,11 +152,17 @@ interface StudyFlowDao {
     @Query("SELECT * FROM study_notes WHERE subjectId = :subjectId")
     fun getStudyNotesBySubject(subjectId: Int): Flow<List<StudyNote>>
 
+    @Query("SELECT * FROM study_notes")
+    fun getAllStudyNotes(): Flow<List<StudyNote>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMindMapNode(node: MindMapNode): Long
 
     @Query("SELECT * FROM mind_map_nodes WHERE subjectId = :subjectId")
     fun getMindMapNodesBySubject(subjectId: Int): Flow<List<MindMapNode>>
+
+    @Query("SELECT * FROM mind_map_nodes")
+    fun getAllMindMapNodes(): Flow<List<MindMapNode>>
 
     // Phase 6 Entities
     @Query("SELECT * FROM exam_goals ORDER BY examDate ASC")

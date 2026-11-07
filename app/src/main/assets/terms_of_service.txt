@@ -1,0 +1,55 @@
+TERMOS DE USO — STUDYFLOW
+Versão: 1.0 (Novembro/2026)
+
+Bem-vindo ao StudyFlow! Estes Termos de Uso regulam o acesso e a utilização do aplicativo StudyFlow ("Aplicativo"), desenvolvido para organização, planejamento e otimização de rotinas de estudo voltadas a vestibulares, ENEM e concursos públicos.
+
+1. IDENTIFICAÇÃO DO CONTROLADOR E RESPONSÁVEL
+O StudyFlow é operado por:
+[PREENCHER: Razão Social / Nome Completo do Controlador]
+[PREENCHER: CNPJ / CPF]
+[PREENCHER: Endereço comercial completo / Sede]
+Canal de Atendimento e Encarregado pelo Tratamento de Dados (DPO):
+[PREENCHER: E-mail de Contato / Canal de Privacidade]
+
+2. ACEITAÇÃO DOS TERMOS
+Ao criar uma conta ou utilizar os serviços do StudyFlow, você declara ter lido, compreendido e concordado expressamente com estes Termos de Uso e com a nossa Política de Privacidade.
+Caso você não concorde com qualquer disposição aqui contida, você não deve utilizar o Aplicativo.
+
+3. ELEGIBILIDADE E FAIXA ETÁRIA (CONFORMIDADE COM O ECA DIGITAL - LEI 15.211/2025)
+3.1. O StudyFlow destina-se a usuários a partir de 12 (doze) anos de idade.
+3.2. Crianças menores de 12 anos não estão autorizadas a criar contas ou utilizar as funcionalidades do Aplicativo sem a representação e consentimento legal específico de seus pais ou responsáveis legais.
+3.3. Usuários entre 12 e 17 anos (adolescentes) podem criar contas, operando sob proteções adicionais reforçadas de privacidade: a coleta de dados de telemetria e análise de uso (Analytics) é desativada por padrão e mantida desligada para resguardar seu melhor interesse.
+
+4. DESCRIÇÃO DOS SERVIÇOS
+O StudyFlow oferece ferramentas de:
+- Gestão de disciplinas, tarefas, cronogramas e sessões de estudo (técnica Pomodoro);
+- Registro de metas de estudo (ENEM, concursos, vestibulares) e histórico de simulados;
+- Sistema de repetição espaçada para revisão de flashcards (método Leitner);
+- Recursos assistivos de Inteligência Artificial generativa (tutor inteligente, mentoria de estudos, geração de resumos e questões, e análise estrutural de editais/documentos).
+
+5. REGRAS DE USO E RESPONSABILIDADES DO USUÁRIO
+Ao utilizar o Aplicativo, você se compromete a:
+a) Fornecer informações verídicas e manter a segurança de suas credenciais de acesso;
+b) Não submeter aos recursos de inteligência artificial ou aos módulos de upload qualquer dado de terceiros sem autorização, nem documentos confidenciais, dados sensíveis (saúde, biometria, orientação política/religiosa) ou materiais ilícitos;
+c) Não tentar descompilar, violar a segurança, contornar barreiras de acesso ou sobrecarregar a infraestrutura do Aplicativo.
+
+6. RECURSOS DE INTELIGÊNCIA ARTIFICIAL GENERATIVA
+6.1. O StudyFlow integra modelos avançados de Inteligência Artificial do Google Gemini por meio do serviço Firebase AI Logic.
+6.2. As respostas geradas pela IA têm caráter puramente consultivo, educacional e orientativo, não substituindo o estudo aprofundado, editais oficiais publicados por bancas examinadoras ou orientação pedagógica formal.
+6.3. O uso de recursos de IA é estritamente condicionado ao seu consentimento específico prévio, podendo ser desativado a qualquer momento nas Configurações do Aplicativo.
+
+7. DIREITOS DO USUÁRIO (LGPD - LEI 13.709/2018)
+O usuário tem garantido o pleno exercício de seus direitos previstos no artigo 18 da LGPD, incluindo:
+a) Confirmação da existência de tratamento e acesso aos dados;
+b) Portabilidade dos dados, disponibilizada diretamente na tela de Configurações através do botão "Exportar meus dados" em formato JSON aberto;
+c) Eliminação e exclusão definitiva de dados pessoais, realizada de forma irreversível nas Configurações mediante confirmação do titular.
+
+8. PROPRIEDADE INTELECTUAL
+O código-fonte, design, marcas, ilustrações e arquitetura do Aplicativo são de propriedade exclusiva do controlador ou licenciados regularmente. O uso do Aplicativo confere ao usuário licença pessoal, revogável, não exclusiva e intransferível.
+
+9. ALTERAÇÕES DOS TERMOS
+Estes Termos podem ser atualizados periodicamente. Sempre que houver alterações substanciais, será solicitado novo consentimento ou apresentada notificação expressa no Aplicativo.
+
+10. LEGISLAÇÃO APLICÁVEL E FORO
+Estes Termos são regidos pelas leis da República Federativa do Brasil, em especial o Marco Civil da Internet (Lei 12.965/2014), a Lei Geral de Proteção de Dados Pessoais (Lei 13.709/2018) e o Estatuto da Criança e do Adolescente (Lei 8.069/1990 e Lei 15.211/2025).
+Fica eleito o foro da comarca de [PREENCHER: Cidade / UF do foro de eleição] para dirimir eventuais controvérsias decorrentes destes Termos.

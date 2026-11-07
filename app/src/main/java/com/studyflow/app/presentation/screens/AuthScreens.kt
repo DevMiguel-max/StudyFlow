@@ -6,6 +6,7 @@ import android.content.ContextWrapper
 import android.util.Log
 import android.util.Patterns
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,10 +41,13 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
 import com.studyflow.app.R
+import com.studyflow.app.domain.manager.AgeGroup
+import com.studyflow.app.domain.manager.PrivacyManager
 import com.studyflow.app.presentation.viewmodel.AuthViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 internal fun Context.findActivity(): Activity? {
     var currentContext = this
@@ -329,6 +333,28 @@ fun LoginScreen(
                 Text("Continuar Offline", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(
+                    onClick = { navController.navigate("terms_of_service") },
+                    enabled = !state.isLoading
+                ) {
+                    Text("Termos de Uso", style = MaterialTheme.typography.bodySmall)
+                }
+                Text("•", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp))
+                TextButton(
+                    onClick = { navController.navigate("privacy_policy") },
+                    enabled = !state.isLoading
+                ) {
+                    Text("Política de Privacidade", style = MaterialTheme.typography.bodySmall)
+                }
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
@@ -345,7 +371,10 @@ fun SignUpScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
+    var selectedAgeGroup by remember { mutableStateOf<AgeGroup?>(null) }
+    var termsAccepted by remember { mutableStateOf(false) }
 
+    val privacyManager: PrivacyManager = koinInject()
     val state by viewModel.state.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
     val context = LocalContext.current
@@ -360,7 +389,8 @@ fun SignUpScreen(
     val isConfirmValid = confirmPassword.isNotEmpty() && confirmPassword == password
     val confirmError = if (confirmPassword.isNotEmpty() && confirmPassword != password) "As senhas não coincidem" else null
 
-    val isSignUpFormValid = isEmailValid && isPasswordValid && isConfirmValid
+    val isAgeAllowed = selectedAgeGroup != null && selectedAgeGroup != AgeGroup.UNDER_12
+    val isSignUpFormValid = isEmailValid && isPasswordValid && isConfirmValid && termsAccepted && isAgeAllowed
 
     LaunchedEffect(currentUser, state.isSuccess) {
         if (currentUser != null) {
@@ -464,6 +494,133 @@ fun SignUpScreen(
                 enabled = !state.isLoading
             )
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Faixa Etária (ECA Digital)
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Faixa etária (ECA Digital — Lei 15.211/2025)",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    FilterChip(
+                        selected = selectedAgeGroup == AgeGroup.UNDER_12,
+                        onClick = { selectedAgeGroup = AgeGroup.UNDER_12 },
+                        label = { Text("< 12 anos", style = MaterialTheme.typography.labelSmall) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    FilterChip(
+                        selected = selectedAgeGroup == AgeGroup.TEEN_12_17,
+                        onClick = { selectedAgeGroup = AgeGroup.TEEN_12_17 },
+                        label = { Text("12 a 17 anos", style = MaterialTheme.typography.labelSmall) },
+                        modifier = Modifier.weight(1.1f)
+                    )
+                    FilterChip(
+                        selected = selectedAgeGroup == AgeGroup.ADULT_18_PLUS,
+                        onClick = { selectedAgeGroup = AgeGroup.ADULT_18_PLUS },
+                        label = { Text("18+ anos", style = MaterialTheme.typography.labelSmall) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                if (selectedAgeGroup == AgeGroup.UNDER_12) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = "Cadastro Indisponível para menores de 12 anos",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Em conformidade com o ECA Digital (Lei 15.211/2025), o StudyFlow não permite o cadastro direto de crianças menores de 12 anos sem a representação formal e consentimento dos pais ou responsáveis legais.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                    }
+                } else if (selectedAgeGroup == AgeGroup.TEEN_12_17) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = "Privacidade Protegida (12 a 17 anos)",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "A coleta de estatísticas de uso e telemetria permanecerá permanentemente desativada para sua proteção e privacidade.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Checkbox não pré-marcado para Termos e Política
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked = termsAccepted,
+                    onCheckedChange = { termsAccepted = it },
+                    enabled = !state.isLoading
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Column {
+                    Text(
+                        text = "Li e aceito os:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Termos de Uso",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clickable { navController.navigate("terms_of_service") }
+                        )
+                        Text(
+                            text = " e a ",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Política de Privacidade",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clickable { navController.navigate("privacy_policy") }
+                        )
+                    }
+                }
+            }
+
             if (state.error != null) {
                 Text(
                     text = state.error!!,
@@ -484,6 +641,10 @@ fun SignUpScreen(
             // Botão "Cadastrar"
             Button(
                 onClick = {
+                    scope.launch {
+                        privacyManager.recordTermsConsent()
+                        selectedAgeGroup?.let { privacyManager.setAgeGroup(it) }
+                    }
                     viewModel.signUpWithEmail(email.trim(), password)
                 },
                 modifier = Modifier
@@ -515,8 +676,14 @@ fun SignUpScreen(
 
             GoogleSignInButton(
                 text = "Cadastrar com o Google",
-                onClick = { launchGoogleSignIn(context, viewModel, scope) },
-                enabled = !state.isLoading
+                onClick = {
+                    scope.launch {
+                        privacyManager.recordTermsConsent()
+                        selectedAgeGroup?.let { privacyManager.setAgeGroup(it) }
+                    }
+                    launchGoogleSignIn(context, viewModel, scope)
+                },
+                enabled = termsAccepted && isAgeAllowed && !state.isLoading
             )
 
             Spacer(modifier = Modifier.height(16.dp))

@@ -7,10 +7,16 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 object AICacheManager : AICache, KoinComponent {
-    private const val CACHE_EXPIRATION_MS = 1000L * 60 * 60 * 24 // 24 hours
+    private const val CACHE_EXPIRATION_MS = 30L * 24 * 60 * 60 * 1000 // 30 dias (LGPD / Retenção)
     
     private val dao: AICacheDao by inject()
     private val metadataManager: AIMetadataManager by inject()
+
+    suspend fun purgeExpiredCache() {
+        val cutoff = System.currentTimeMillis() - CACHE_EXPIRATION_MS
+        dao.deleteExpiredCache(cutoff)
+        metadataManager.setLastCleanupTime(System.currentTimeMillis())
+    }
 
     override suspend fun get(key: String): String? {
         val isEnabled = metadataManager.cacheEnabled.first()

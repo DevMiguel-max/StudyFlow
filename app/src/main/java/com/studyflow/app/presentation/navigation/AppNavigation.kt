@@ -4,9 +4,12 @@ import androidx.compose.animation.*
 import com.studyflow.app.presentation.screens.*
 
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
@@ -15,13 +18,25 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.studyflow.app.domain.manager.PrivacyManager
 import com.studyflow.app.presentation.components.AppBottomBar
+import org.koin.compose.koinInject
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(
+    privacyManager: PrivacyManager = koinInject()
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val isConsentCompleted by privacyManager.isConsentAndAgeCompleted.collectAsState(initial = null)
+
+    if (isConsentCompleted == null) {
+        Box(modifier = Modifier.fillMaxSize())
+        return
+    }
+
+    val startDestination = if (isConsentCompleted == true) "login" else "welcome_consent"
     
     val showBottomBar = currentRoute?.startsWith("home") == true || 
                         currentRoute?.startsWith("subjects") == true ||
@@ -43,17 +58,32 @@ fun AppNavigation() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = "login",
+            startDestination = startDestination,
             modifier = Modifier.padding(innerPadding),
             enterTransition = { fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 0.95f) },
             exitTransition = { fadeOut(animationSpec = tween(300)) },
             popEnterTransition = { fadeIn(animationSpec = tween(300)) },
             popExitTransition = { fadeOut(animationSpec = tween(300)) + scaleOut(targetScale = 0.95f) }
         ) {
+            composable("welcome_consent") { WelcomeConsentScreen(navController) }
             composable("onboarding") { OnboardingScreen(navController) }
             composable("login") { LoginScreen(navController) }
             composable("signup") { SignUpScreen(navController) }
             composable("recover_password") { RecoverPasswordScreen(navController) }
+            composable("terms_of_service") {
+                LegalDocScreen(
+                    navController = navController,
+                    title = "Termos de Uso",
+                    assetFileName = "terms_of_service.txt"
+                )
+            }
+            composable("privacy_policy") {
+                LegalDocScreen(
+                    navController = navController,
+                    title = "Política de Privacidade",
+                    assetFileName = "privacy_policy.txt"
+                )
+            }
 
             composable("home") { HomeScreen(navController) }
             composable("more") { MoreScreen(navController) }
